@@ -1,0 +1,2 @@
+.. |token-error| replace:: :exc:`~enlyze.errors.InvalidTokenError` on authentication failure
+.. |generic-error| replace:: :exc:`~enlyze.errors.EnlyzeError` on general failure

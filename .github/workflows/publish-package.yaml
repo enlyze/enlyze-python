@@ -1,0 +1,55 @@
+name: Publish package to PyPI
+
+on:
+  push:
+    branches:
+      - "master"
+    tags:
+      - "v*"
+
+jobs:
+  publish-to-pypi:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+          cache: "pip"
+          cache-dependency-path: "**/*pyproject.toml"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --quiet --upgrade tox twine build dunamai toml-cli
+
+      - name: Set version
+        run: |
+          echo "VERSION = \"$(dunamai from any --no-metadata --bump)\"" > src/enlyze/_version.py
+
+      - name: Test
+        env:
+          HYPOTHESIS_PROFILE: ci
+        run: tox -e py311
+
+      - name: Build package
+        run: python -m build
+
+      - name: Upload package to Test PyPI
+        env:
+          TWINE_REPOSITORY: "testpypi"
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: "${{ secrets.API_TOKEN_TEST_PYPI }}"
+        run: twine upload dist/*
+
+      - name: Upload package to PyPI
+        if: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') }}
+        env:
+          TWINE_REPOSITORY: "pypi"
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: "${{ secrets.API_TOKEN_PYPI }}"
+        run: twine upload dist/*

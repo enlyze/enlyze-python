@@ -1,0 +1,57 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+  "setuptools",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "enlyze._version.VERSION"}
+
+[project]
+name = "enlyze"
+readme = "README.rst"
+license = {file = "LICENSE"}
+requires-python = ">=3.10.7"
+dynamic = [
+  'version',
+]
+dependencies = [
+  "httpx",
+  "pandas",
+  "pydantic",
+]
+[project.optional-dependencies]
+docs = [
+  "sphinx",
+  "sphinx-rtd-theme",
+  "sphinx-tabs",
+  "sphinxcontrib-spelling",
+]
+lint = [
+  "bandit",
+  "black",
+  "flake8",
+  "isort",
+  "mypy",
+  "pyproject-fmt",
+  "safety",
+  "tox-ini-fmt",
+]
+test = [
+  "coverage",
+  "hypothesis",
+  "pandas-stubs",
+  "pytest",
+  "pytest-cov",
+  "pytest-randomly",
+  "pytest-sugar",
+  "pytest-xdist",
+  "respx",
+]
+
+
+[tool.mypy]
+exclude="tests"
+
+[tool.isort]
+profile = "black"

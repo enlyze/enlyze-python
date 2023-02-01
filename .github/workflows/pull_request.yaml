@@ -1,0 +1,84 @@
+name: Lint and test
+
+on:
+  - pull_request
+
+jobs:
+  lint-and-test:
+    strategy:
+      matrix:
+        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+        python-version: ["3.10", "3.11"]
+        include:
+          - os: "ubuntu-latest"
+            python-version: "3.11"
+            coverage-report: true
+
+    runs-on: "${{ matrix.os }}"
+    env:
+      TOX_PARALLEL_NO_SPINNER: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+          cache-dependency-path: "**/*pyproject.toml"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --quiet --upgrade pip
+          python -m pip install --quiet tox tox-gh-actions==3.0.0b1
+
+      - name: Compile latest package dependencies
+        # generates requirements.txt which is used to detect package updates in
+        # order to invalidate the tox cache
+        run: |
+          tox -e requirements
+
+      - name: Enable tox cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.tox
+          key: ${{ runner.os }}-tox-py${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Lint
+        run: tox run-parallel -e flake8,black,isort,tox-fmt,pyproject-fmt,docs-fmt
+
+      - name: Security checks
+        run: tox run-parallel -e bandit
+
+      - name: Mypy
+        run: tox -e mypy
+
+      - name: Docs
+        if: ${{ runner.os == 'Linux' }}
+        run: tox run-parallel -e docs,docs-spellcheck,docs-linkcheck
+
+      - name: Package and test
+        env:
+          HYPOTHESIS_PROFILE: ci
+        run: tox
+
+      - name: Extract test coverage report
+        if: ${{ matrix.coverage-report == true }}
+        run: |
+          python -m pip install --quiet coverage
+          echo -n > coverage.txt
+          echo 'This is the coverage report for commit ${{ github.event.pull_request.head.sha }}' >> coverage.txt
+          echo '```' >> coverage.txt
+          coverage report --skip-empty --show-missing >> coverage.txt || true
+          echo '```' >> coverage.txt
+
+      - name: Report test coverage
+        if: ${{ matrix.coverage-report == true }}
+        uses: rhs/pr-comment@1.0.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          path: coverage.txt
+          prefix: "# Coverage results"
+          action: replace
