@@ -10,8 +10,9 @@ version = {attr = "enlyze._version.VERSION"}
 [project]
 name = "enlyze"
 readme = "README.rst"
-license = {file = "LICENSE"}
-requires-python = ">=3.10.7"
+license = {text = "MIT"}
+authors = [{name = "ENLYZE GmbH", email = "hello@enlyze.com"},]
+requires-python = ">=3.10"
 dynamic = [
   'version',
 ]
