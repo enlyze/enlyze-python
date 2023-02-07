@@ -9,6 +9,7 @@ version = {attr = "enlyze._version.VERSION"}
 
 [project]
 name = "enlyze"
+description = "Python SDK for interacting with the ENLYZE platform https://www.enlyze.com"
 readme = "README.rst"
 license = {text = "MIT"}
 authors = [{name = "ENLYZE GmbH", email = "hello@enlyze.com"},]
