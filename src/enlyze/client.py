@@ -144,7 +144,7 @@ class EnlyzeClient:
 
         """
 
-        if not start.utcoffset() or not end.utcoffset():
+        if start.utcoffset() is None or end.utcoffset() is None:
             logging.warning(
                 "Passing naive datetime is discouraged, assuming local timezone."
             )

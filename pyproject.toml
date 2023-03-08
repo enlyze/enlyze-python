@@ -51,7 +51,6 @@ test = [
   "respx",
 ]
 
-
 [tool.mypy]
 exclude="tests"
 
