@@ -131,9 +131,8 @@ class EnlyzeClient:
         system where the code is run.
 
         :param start: Beginning of the time frame for which to fetch timeseries data.
-            Must not be in the future and must be before ``end``.
-        :param end: End of the time frame for which to fetch timeseries data. Must not
-            be in the future.
+            Must not be before ``end``.
+        :param end: End of the time frame for which to fetch timeseries data.
         :param variables: The variables for which to fetch timeseries data.
 
         :raises: |token-error|
@@ -151,9 +150,6 @@ class EnlyzeClient:
 
         start = _ensure_datetime_aware(start)
         end = _ensure_datetime_aware(end)
-
-        if end > datetime.now(tz=timezone.utc):
-            raise EnlyzeError("Cannot request timeseries data in the future")
 
         if start > end:
             raise EnlyzeError("Start must be earlier than end")

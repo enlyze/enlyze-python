@@ -199,11 +199,6 @@ def test_get_timeseries_raises_no_variables():
 def test_get_timeseries_raises_invalid_time_bounds(variable):
     client = make_client()
 
-    with pytest.raises(EnlyzeError, match="data in the future"):
-        client.get_timeseries(
-            datetime.now(), datetime.now() + timedelta(days=1), [variable]
-        )
-
     with pytest.raises(EnlyzeError, match="Start must be earlier than end"):
         client.get_timeseries(
             datetime.now() + timedelta(days=1), datetime.now(), [variable]
