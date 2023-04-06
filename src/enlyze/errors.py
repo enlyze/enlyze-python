@@ -18,3 +18,7 @@ class InvalidTokenError(EnlyzeError):
     - Note: you can **not** use your password as a token
 
     """
+
+
+class ResamplingValidationError(EnlyzeError):
+    """"""

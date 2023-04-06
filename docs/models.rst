@@ -14,9 +14,15 @@ Data models
 .. autoclass:: Variable()
     :members:
 
+.. autoclass:: VariableWithResamplingMethod()
+    :members:
+
 .. autoclass:: VariableDataType()
     :members:
     :undoc-members:
 
 .. autoclass:: TimeseriesData()
+    :members:
+
+.. autoclass:: ResamplingMethod()
     :members:

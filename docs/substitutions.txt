@@ -1,2 +1,3 @@
 .. |token-error| replace:: :exc:`~enlyze.errors.InvalidTokenError` on authentication failure
+.. |resampling-error| replace:: :exc:`~enlyze.errors.ResamplingValidationError` on resampling validation error
 .. |generic-error| replace:: :exc:`~enlyze.errors.EnlyzeError` on general failure

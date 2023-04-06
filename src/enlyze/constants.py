@@ -8,3 +8,10 @@ TIMESERIES_API_SUB_PATH = "timeseries-service/v1/"
 #:
 #: Reference: https://www.python-httpx.org/advanced/#timeout-configuration
 HTTPX_TIMEOUT = 30.0
+
+#: The separator to use when to separate the variable UUID and the resampling method
+#: when querying timeseries data.
+VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR = "||"
+
+#: The minimum allowed resampling interval when resampling timeseries data.
+MINIMUM_RESAMPLING_INTERVAL = 10
