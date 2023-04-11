@@ -1,12 +1,19 @@
+import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from enlyze.models import ResamplingMethod, Variable
+from enlyze.errors import ResamplingValidationError
+from enlyze.models import ResamplingMethod, Variable, VariableDataType
 from enlyze.resampling import convert_to_variable_with_resampling_method
+from enlyze.validators import VARIABLE_ARRAY_DATA_TYPES
 
 
 @given(
-    variable=st.builds(Variable), resampling_method=st.sampled_from(ResamplingMethod)
+    variable=st.builds(
+        Variable,
+        data_type=st.sampled_from((VariableDataType.FLOAT, VariableDataType.INTEGER)),
+    ),
+    resampling_method=st.sampled_from(ResamplingMethod),
 )
 def test_convert_to_variable_with_resampling_method(variable, resampling_method):
     variable_with_resampling_method = convert_to_variable_with_resampling_method(
@@ -19,3 +26,67 @@ def test_convert_to_variable_with_resampling_method(variable, resampling_method)
     assert variable_with_resampling_method.data_type == variable.data_type
     assert variable_with_resampling_method.appliance == variable.appliance
     assert variable_with_resampling_method.resampling_method == resampling_method
+
+
+@given(
+    variable=st.builds(
+        Variable,
+        data_type=st.sampled_from((VariableDataType.BOOLEAN, VariableDataType.STRING)),
+    ),
+    resampling_method=st.sampled_from(
+        (
+            ResamplingMethod.FIRST,
+            ResamplingMethod.LAST,
+            ResamplingMethod.MAX,
+            ResamplingMethod.MIN,
+            ResamplingMethod.COUNT,
+        )
+    ),
+)
+def test_convert_to_variable_with_resampling_method_boolean_or_string(
+    variable, resampling_method
+):
+    variable_with_resampling_method = convert_to_variable_with_resampling_method(
+        variable, resampling_method
+    )
+
+    assert variable_with_resampling_method.uuid == variable.uuid
+    assert variable_with_resampling_method.display_name == variable.display_name
+    assert variable_with_resampling_method.unit == variable.unit
+    assert variable_with_resampling_method.data_type == variable.data_type
+    assert variable_with_resampling_method.appliance == variable.appliance
+    assert variable_with_resampling_method.resampling_method == resampling_method
+
+
+@given(
+    variable=st.builds(
+        Variable,
+        data_type=st.sampled_from((VariableDataType.BOOLEAN, VariableDataType.STRING)),
+    ),
+    resampling_method=st.sampled_from(
+        (
+            ResamplingMethod.AVG,
+            ResamplingMethod.SUM,
+            ResamplingMethod.MEDIAN,
+        )
+    ),
+)
+def test_convert_to_variable_with_resampling_method_boolean_or_string_raises(
+    variable, resampling_method
+):
+    with pytest.raises(ResamplingValidationError):
+        convert_to_variable_with_resampling_method(variable, resampling_method)
+
+
+@given(
+    variable=st.builds(
+        Variable,
+        data_type=st.sampled_from(VARIABLE_ARRAY_DATA_TYPES),
+    ),
+    resampling_method=st.sampled_from(ResamplingMethod),
+)
+def test_convert_to_variable_with_resampling_method_array_raises(
+    variable, resampling_method
+):
+    with pytest.raises(ResamplingValidationError):
+        convert_to_variable_with_resampling_method(variable, resampling_method)

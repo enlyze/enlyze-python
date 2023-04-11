@@ -1,4 +1,5 @@
 import enlyze.models as user_models
+from enlyze.validators import validate_resampling_method_for_data_type
 
 
 def convert_to_variable_with_resampling_method(
@@ -11,10 +12,14 @@ def convert_to_variable_with_resampling_method(
     :param resampling_method: The resampling method to set on the variable.
     :type resampling_method: :class:`~enlyze.models.ResamplingMethod`
 
+    :raises: |resampling-error|
+
     :returns: A variable with resampling method.
     :rtype: :class:`~enlyze.models.VariableWithResamplingMethod`.
 
     """
+
+    validate_resampling_method_for_data_type(resampling_method, variable.data_type)
 
     return user_models.VariableWithResamplingMethod(
         uuid=variable.uuid,
