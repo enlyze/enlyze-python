@@ -21,6 +21,4 @@ class InvalidTokenError(EnlyzeError):
 
 
 class ResamplingValidationError(EnlyzeError):
-    """
-
-    """
+    """ """
