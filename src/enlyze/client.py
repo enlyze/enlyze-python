@@ -157,7 +157,7 @@ class EnlyzeClient:
         :raises: |generic-error|
 
         :returns: Timeseries data or ``None`` if the API returned
-        no data for the request
+            no data for the request
 
         """
 
@@ -208,17 +208,17 @@ class EnlyzeClient:
             Must not be before ``end``.
         :param end: End of the time frame for which to fetch timeseries data.
         :param variables: The variables for which to fetch timeseries data.
-        These variables must be of the type
-        :class:`~enlyze.models.VariableWithResamplingMethod`, in case
-        you have variables of type :class:`~enlyze.models.Variable`
-        you can use
-        :func:`~enlyze.resampling.convert_to_variable_with_resampling_method`
-        to convert each of them to
-        :class:`~enlyze.models.VariableWithResamplingMethod`.
+            These variables must be of the type
+            :class:`~enlyze.models.VariableWithResamplingMethod`, in case
+            you have variables of type :class:`~enlyze.models.Variable`
+            you can use
+            :func:`~enlyze.resampling.convert_to_variable_with_resampling_method`
+            to convert each of them to
+            :class:`~enlyze.models.VariableWithResamplingMethod`.
 
         :param resampling_interval: The interval to resample
-        timeseries data with.  Must be greater than or equal
-        :const:`~enlyze.constants.MINIMUM_RESAMPLING_INTERVAL`.
+            timeseries data with.  Must be greater than or equal
+            :const:`~enlyze.constants.MINIMUM_RESAMPLING_INTERVAL`.
 
         :raises: |token-error|
 
@@ -227,7 +227,7 @@ class EnlyzeClient:
         :raises: |generic-error|
 
         :returns: Timeseries data or ``None`` if the API returned
-        no data for the request
+            no data for the request
 
         """
 
