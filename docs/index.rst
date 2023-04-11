@@ -17,6 +17,7 @@ User's Guide
     concepts
     client
     models
+    resampling
     errors
     constants
     timeseries_api/index
