@@ -10,14 +10,41 @@ from enlyze.resampling import convert_to_variable_with_resampling_method
 from enlyze.validators import VARIABLE_ARRAY_DATA_TYPES
 
 
-@given(
-    variable=st.builds(
-        Variable,
-        data_type=st.sampled_from((VariableDataType.FLOAT, VariableDataType.INTEGER)),
-    ),
-    resampling_method=st.sampled_from(ResamplingMethod),
+@given(data=st.data())
+@pytest.mark.parametrize(
+    "variable_strategy,resampling_method_strategy",
+    [
+        (
+            st.builds(
+                Variable,
+                data_type=st.sampled_from(
+                    (VariableDataType.FLOAT, VariableDataType.INTEGER)
+                ),
+            ),
+            st.sampled_from(ResamplingMethod),
+        ),
+        (
+            st.builds(
+                Variable,
+                data_type=st.sampled_from(
+                    (VariableDataType.BOOLEAN, VariableDataType.STRING)
+                ),
+            ),
+            st.sampled_from(
+                (
+                    ResamplingMethod.FIRST,
+                    ResamplingMethod.LAST,
+                    ResamplingMethod.MAX,
+                    ResamplingMethod.MIN,
+                    ResamplingMethod.COUNT,
+                )
+            ),
+        ),
+    ],
 )
-def test_convert_to_variable_with_resampling_method(variable, resampling_method):
+def test_convert_to_variable_with_resampling_method(data, variable_strategy, resampling_method_strategy):
+    variable = data.draw(variable_strategy)
+    resampling_method = data.draw(resampling_method_strategy)
     variable_with_resampling_method = convert_to_variable_with_resampling_method(
         variable, resampling_method
     )
