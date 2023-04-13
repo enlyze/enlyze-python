@@ -60,35 +60,40 @@ def test_convert_to_variable_with_resampling_method(
     assert variable_resampling_method == resampling_method
 
 
-@given(
-    variable=st.builds(
-        Variable,
-        data_type=st.sampled_from((VariableDataType.BOOLEAN, VariableDataType.STRING)),
-    ),
-    resampling_method=st.sampled_from(
+@given(data=st.data())
+@pytest.mark.parametrize(
+    "variable_strategy,resampling_method_strategy",
+    [
         (
-            ResamplingMethod.AVG,
-            ResamplingMethod.SUM,
-            ResamplingMethod.MEDIAN,
-        )
-    ),
+            st.builds(
+                Variable,
+                data_type=st.sampled_from(
+                    (VariableDataType.BOOLEAN, VariableDataType.STRING)
+                ),
+            ),
+            st.sampled_from(
+                (
+                    ResamplingMethod.AVG,
+                    ResamplingMethod.SUM,
+                    ResamplingMethod.MEDIAN,
+                )
+            ),
+        ),
+        (
+            st.builds(
+                Variable,
+                data_type=st.sampled_from(VARIABLE_ARRAY_DATA_TYPES),
+            ),
+            st.sampled_from(ResamplingMethod),
+        ),
+    ],
 )
 def test_convert_to_variable_with_resampling_method_boolean_or_string_raises(
-    variable, resampling_method
+    data,
+    variable_strategy,
+    resampling_method_strategy,
 ):
-    with pytest.raises(ResamplingValidationError):
-        convert_to_variable_with_resampling_method(variable, resampling_method)
-
-
-@given(
-    variable=st.builds(
-        Variable,
-        data_type=st.sampled_from(VARIABLE_ARRAY_DATA_TYPES),
-    ),
-    resampling_method=st.sampled_from(ResamplingMethod),
-)
-def test_convert_to_variable_with_resampling_method_array_raises(
-    variable, resampling_method
-):
+    variable = data.draw(variable_strategy)
+    resampling_method = data.draw(resampling_method_strategy)
     with pytest.raises(ResamplingValidationError):
         convert_to_variable_with_resampling_method(variable, resampling_method)
