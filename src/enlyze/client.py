@@ -136,7 +136,7 @@ class EnlyzeClient:
         end: datetime,
         variables: list[user_models.Variable],
     ) -> Optional[user_models.TimeseriesData]:
-        """Get resampled timeseries data of :ref:`variables <variable>`
+        """Get timeseries data of :ref:`variables <variable>`
         for a given time frame.
 
         Timeseries data for multiple variables can be requested at once. However, all
