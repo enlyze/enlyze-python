@@ -8,9 +8,7 @@ def convert_to_variable_with_resampling_method(
     """Convert a :class:`~enlyze.models.Variable` to a :class:`~enlyze.models.VariableWithResamplingMethod`.
 
     :param variable: The variable to convert.
-    :type variable: :class:`~enlyze.models.Variable`
     :param resampling_method: The resampling method to set on the variable.
-    :type resampling_method: :class:`~enlyze.models.ResamplingMethod`
 
     :raises: |resampling-error|
 
