@@ -80,8 +80,7 @@ class TimeseriesData(TimeseriesApiModel):
         self,
         start: datetime,
         end: datetime,
-        variables: Sequence[user_models.Variable]
-        | Sequence[user_models.VariableWithResamplingMethod],
+        variables: Sequence[user_models.VariableOrVariableWithResamplingMethodSequence],
     ) -> user_models.TimeseriesData:
         return user_models.TimeseriesData(
             start=start,
