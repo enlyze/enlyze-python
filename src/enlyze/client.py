@@ -216,7 +216,7 @@ class EnlyzeClient:
             to convert each of them to
             :class:`~enlyze.models.VariableWithResamplingMethod`.
 
-        :param resampling_interval: The interval to resample
+        :param resampling_interval: The interval in seconds to resample
             timeseries data with.  Must be greater than or equal
             :const:`~enlyze.constants.MINIMUM_RESAMPLING_INTERVAL`.
 
