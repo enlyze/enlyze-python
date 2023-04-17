@@ -7,6 +7,8 @@ from uuid import UUID
 
 import pandas
 
+from enlyze.types import VariableOrVariableWithResamplingMethodSequence
+
 
 @dataclass(frozen=True)
 class Site:
@@ -120,7 +122,7 @@ class TimeseriesData:
     end: datetime
 
     #: The variables for which timeseries data has been requested.
-    variables: Sequence[Variable] | Sequence[VariableWithResamplingMethod]
+    variables: VariableOrVariableWithResamplingMethodSequence
 
     _columns: list[str]
     _records: list[Any]

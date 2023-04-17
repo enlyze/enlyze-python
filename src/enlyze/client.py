@@ -1,6 +1,6 @@
 from datetime import datetime
 from functools import cache
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Sequence
 from uuid import UUID
 
 import enlyze.models as user_models
@@ -111,7 +111,7 @@ class EnlyzeClient:
 
     def get_variables(
         self, appliance: user_models.Appliance
-    ) -> list[user_models.Variable]:
+    ) -> Sequence[user_models.Variable]:
         """Retrieve all variables of an :ref:`appliance <appliance>`.
 
         :param appliance: The appliance for which to get all variables.
@@ -122,7 +122,6 @@ class EnlyzeClient:
         :raises: |generic-error|
 
         :returns: Variables of ``appliance``
-        :rtype: list[:class:`~enlyze.models.Variable`]
 
         """
         return [
@@ -134,7 +133,7 @@ class EnlyzeClient:
         self,
         start: datetime,
         end: datetime,
-        variables: list[user_models.Variable],
+        variables: Sequence[user_models.Variable],
     ) -> Optional[user_models.TimeseriesData]:
         """Get timeseries data of :ref:`variables <variable>`
         for a given time frame.
@@ -190,7 +189,7 @@ class EnlyzeClient:
         self,
         start: datetime,
         end: datetime,
-        variables: list[user_models.VariableWithResamplingMethod],
+        variables: Sequence[user_models.VariableWithResamplingMethod],
         resampling_interval: int,
     ) -> Optional[user_models.TimeseriesData]:
         """Get timeseries data of :ref:`variables <variable>` for a given time frame.
