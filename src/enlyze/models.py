@@ -2,12 +2,10 @@ from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from enum import Enum
 from itertools import chain
-from typing import Any, Iterator, Optional
+from typing import Any, Iterator, Optional, Sequence
 from uuid import UUID
 
 import pandas
-
-from enlyze.types import VariableOrVariableWithResamplingMethodSequence
 
 
 @dataclass(frozen=True)
@@ -109,6 +107,11 @@ class Variable:
 class VariableWithResamplingMethod(Variable):
     #: The resampling method to use when resampling timeseries data for this variable.
     resampling_method: ResamplingMethod
+
+
+VariableOrVariableWithResamplingMethodSequence = (
+    Sequence[Variable] | Sequence[VariableWithResamplingMethod]
+)
 
 
 @dataclass(frozen=True)

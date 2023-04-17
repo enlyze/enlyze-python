@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 import enlyze.models as user_models
 from enlyze.constants import MINIMUM_RESAMPLING_INTERVAL
 from enlyze.errors import EnlyzeError, ResamplingValidationError
-from enlyze.types import VariableOrVariableWithResamplingMethodSequence
 
 VARIABLE_ARRAY_DATA_TYPES = (
     user_models.VariableDataType.ARRAY_BOOLEAN,
@@ -27,7 +26,7 @@ def _ensure_datetime_aware(dt: datetime) -> datetime:
 def validate_timeseries_arguments(
     start: datetime,
     end: datetime,
-    variables: VariableOrVariableWithResamplingMethodSequence,
+    variables: user_models.VariableOrVariableWithResamplingMethodSequence,
 ) -> tuple[datetime, datetime, str]:
     if not variables:
         raise EnlyzeError("Need to request at least one variable")
