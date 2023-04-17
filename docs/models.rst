@@ -27,3 +27,4 @@ Data models
 
 .. autoclass:: ResamplingMethod()
     :members:
+    :undoc-members:
