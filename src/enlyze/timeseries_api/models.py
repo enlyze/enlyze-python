@@ -7,7 +7,6 @@ from pydantic import BaseModel
 import enlyze.models as user_models
 
 
-
 class TimeseriesApiModel(BaseModel):
     """Base class for Timeseries API object models using pydantic
 
