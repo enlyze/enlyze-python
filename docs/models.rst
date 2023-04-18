@@ -17,6 +17,7 @@ Data models
 .. autoclass:: VariableWithResamplingMethod()
     :members:
     :show-inheritance:
+    :inherited-members:
 
 .. autoclass:: VariableDataType()
     :members:

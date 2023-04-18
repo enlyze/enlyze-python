@@ -105,6 +105,8 @@ class Variable:
 
 @dataclass(frozen=True)
 class VariableWithResamplingMethod(Variable):
+    """Similar to :class:`~Variable` with the addition of `resampling_method`. You will typically use this when trying to fetch resampled time series data using :meth:`~enlyze.client.EnlyzeClient.get_timeseries_with_resampling` to define how you want a variable to be resampled."""  # noqa: E501
+
     #: The resampling method to use when resampling timeseries data for this variable.
     resampling_method: ResamplingMethod
 
