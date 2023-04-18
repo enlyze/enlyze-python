@@ -46,7 +46,7 @@ jobs:
           key: ${{ runner.os }}-tox-py${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
 
       - name: Lint
-        run: tox run-parallel -e flake8,black,isort,tox-fmt,pyproject-fmt
+        run: tox run-parallel -e flake8,black,isort,tox-fmt,pyproject-fmt,docs-fmt
 
       - name: Security checks
         run: tox run-parallel -e bandit
