@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from enum import Enum
 from itertools import chain
-from typing import Any, Iterator, Optional, Sequence
+from typing import Any, Iterator, Optional, Sequence, Union
 from uuid import UUID
 
 import pandas
@@ -109,9 +109,9 @@ class VariableWithResamplingMethod(Variable):
     resampling_method: ResamplingMethod
 
 
-VariableOrVariableWithResamplingMethodSequence = (
-    Sequence[Variable] | Sequence[VariableWithResamplingMethod]
-)
+VariableOrVariableWithResamplingMethodSequence = Union[
+    Sequence[Variable], Sequence[VariableWithResamplingMethod]
+]
 
 
 @dataclass(frozen=True)

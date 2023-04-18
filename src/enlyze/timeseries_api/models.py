@@ -1,10 +1,11 @@
 from datetime import date, datetime
-from typing import Any, Optional, Sequence
+from typing import Any, Optional
 from uuid import UUID
 
 from pydantic import BaseModel
 
 import enlyze.models as user_models
+
 
 
 class TimeseriesApiModel(BaseModel):
@@ -80,8 +81,7 @@ class TimeseriesData(TimeseriesApiModel):
         self,
         start: datetime,
         end: datetime,
-        variables: Sequence[user_models.Variable]
-        | Sequence[user_models.VariableWithResamplingMethod],
+        variables: user_models.VariableOrVariableWithResamplingMethodSequence,
     ) -> user_models.TimeseriesData:
         return user_models.TimeseriesData(
             start=start,
