@@ -22,8 +22,9 @@ class InvalidTokenError(EnlyzeError):
 
 class ResamplingValidationError(EnlyzeError):
     """Invalid request for resampling
-    
+
     Timeseries data could not be requested from the ENLYZE platform. This may happen
     when a resampling method is incomaptible with the variable data type or an invalid
     resampling interval is specified.
+
     """

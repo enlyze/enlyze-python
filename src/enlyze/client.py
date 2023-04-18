@@ -135,8 +135,7 @@ class EnlyzeClient:
         end: datetime,
         variables: Sequence[user_models.Variable],
     ) -> Optional[user_models.TimeseriesData]:
-        """Get timeseries data of :ref:`variables <variable>`
-        for a given time frame.
+        """Get timeseries data of :ref:`variables <variable>` for a given time frame.
 
         Timeseries data for multiple variables can be requested at once. However, all
         variables must belong to the same appliance.
@@ -155,8 +154,8 @@ class EnlyzeClient:
 
         :raises: |generic-error|
 
-        :returns: Timeseries data or ``None`` if the API returned
-            no data for the request
+        :returns: Timeseries data or ``None`` if the API returned no data for the
+            request
 
         """
 
@@ -194,9 +193,8 @@ class EnlyzeClient:
     ) -> Optional[user_models.TimeseriesData]:
         """Get timeseries data of :ref:`variables <variable>` for a given time frame.
 
-        Timeseries data for multiple variables can be requested at
-        once. However, all variables must belong to the same
-        appliance.
+        Timeseries data for multiple variables can be requested at once. However, all
+        variables must belong to the same appliance.
 
         You should always pass :ref:`timezone-aware datetime
         <python:datetime-naive-aware>` objects to this method! If you don't, naive
@@ -206,17 +204,15 @@ class EnlyzeClient:
         :param start: Beginning of the time frame for which to fetch timeseries data.
             Must not be before ``end``.
         :param end: End of the time frame for which to fetch timeseries data.
-        :param variables: The variables for which to fetch timeseries data.
-            These variables must be of the type
-            :class:`~enlyze.models.VariableWithResamplingMethod`, in case
-            you have variables of type :class:`~enlyze.models.Variable`
-            you can use
-            :func:`~enlyze.resampling.convert_to_variable_with_resampling_method`
-            to convert each of them to
+        :param variables: The variables for which to fetch timeseries data. These
+            variables must be of the type
+            :class:`~enlyze.models.VariableWithResamplingMethod`, in case you have
+            variables of type :class:`~enlyze.models.Variable` you can use
+            :func:`~enlyze.resampling.convert_to_variable_with_resampling_method` to
+            convert each of them to
             :class:`~enlyze.models.VariableWithResamplingMethod`.
-
-        :param resampling_interval: The interval in seconds to resample
-            timeseries data with.  Must be greater than or equal
+        :param resampling_interval: The interval in seconds to resample timeseries data
+            with. Must be greater than or equal
             :const:`~enlyze.constants.MINIMUM_RESAMPLING_INTERVAL`.
 
         :raises: |token-error|
@@ -225,8 +221,8 @@ class EnlyzeClient:
 
         :raises: |generic-error|
 
-        :returns: Timeseries data or ``None`` if the API returned
-            no data for the request
+        :returns: Timeseries data or ``None`` if the API returned no data for the
+            request
 
         """
 

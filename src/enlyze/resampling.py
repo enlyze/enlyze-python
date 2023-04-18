@@ -5,8 +5,7 @@ from enlyze.validators import validate_resampling_method_for_data_type
 def convert_to_variable_with_resampling_method(
     variable: user_models.Variable, resampling_method: user_models.ResamplingMethod
 ) -> user_models.VariableWithResamplingMethod:
-    """Convert a :class:`~enlyze.models.Variable` to a
-    :class:`~enlyze.models.VariableWithResamplingMethod`.
+    """Convert a :class:`~enlyze.models.Variable` to a :class:`~enlyze.models.VariableWithResamplingMethod`.
 
     :param variable: The variable to convert.
     :param resampling_method: The resampling method to set on the variable.
