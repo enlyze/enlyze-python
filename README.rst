@@ -63,6 +63,3 @@ brittle, I suggest installing the library from* ``homebrew`` *and setting the en
 .. code-block:: console
 
     $ export PYENCHANT_LIBRARY_PATH=/opt/homebrew/lib/libenchant-2.dylib
-
-*Keep in mind that you'll need to pass the environment variable to the tox environment*.
-
