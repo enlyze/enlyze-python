@@ -38,8 +38,8 @@ class TestValidateTimeseriesArguments:
 
     @given(variable=variable_strategy)
     def test_validate_start_must_be_earlier_than_end(self, variable):
-        start = datetime.now() + timedelta(days=1)
         end = datetime.now()
+        start = end + timedelta(days=1)
         with pytest.raises(EnlyzeError):
             validate_timeseries_arguments(start, end, [variable])
 
