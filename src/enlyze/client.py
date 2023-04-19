@@ -207,7 +207,7 @@ class EnlyzeClient:
         :param end: End of the time frame for which to fetch timeseries data.
         :param variables: The variables for which to fetch timeseries data along with a
             :class:`~enlyze.models.ResamplingMethod` for each variable. Resampling isn't
-            support for variables whose :class:`~enlyze.models.VariableDataType` is on
+            supported for variables whose :class:`~enlyze.models.VariableDataType` is
             one of the `ARRAY` data types.
         :param resampling_interval: The interval in seconds to resample timeseries data
             with. Must be greater than or equal
