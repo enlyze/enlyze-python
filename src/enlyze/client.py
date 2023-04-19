@@ -1,6 +1,6 @@
 from datetime import datetime
 from functools import cache
-from typing import Iterator, Optional, Sequence
+from typing import Iterator, Mapping, Optional, Sequence
 from uuid import UUID
 
 import enlyze.models as user_models
@@ -188,7 +188,7 @@ class EnlyzeClient:
         self,
         start: datetime,
         end: datetime,
-        variables: Sequence[user_models.VariableWithResamplingMethod],
+        variables: Mapping[user_models.Variable, user_models.ResamplingMethod],
         resampling_interval: int,
     ) -> Optional[user_models.TimeseriesData]:
         """Get timeseries data of :ref:`variables <variable>` for a given time frame.
@@ -204,13 +204,8 @@ class EnlyzeClient:
         :param start: Beginning of the time frame for which to fetch timeseries data.
             Must not be before ``end``.
         :param end: End of the time frame for which to fetch timeseries data.
-        :param variables: The variables for which to fetch timeseries data. These
-            variables must be of the type
-            :class:`~enlyze.models.VariableWithResamplingMethod`, in case you have
-            variables of type :class:`~enlyze.models.Variable` you can use
-            :func:`~enlyze.resampling.convert_to_variable_with_resampling_method` to
-            convert each of them to
-            :class:`~enlyze.models.VariableWithResamplingMethod`.
+        :param variables: The variables for which to fetch timeseries data along with a
+            :class:`~enlyze.models.ResamplingMethod` for each variable.
         :param resampling_interval: The interval in seconds to resample timeseries data
             with. Must be greater than or equal
             :const:`~enlyze.constants.MINIMUM_RESAMPLING_INTERVAL`.
@@ -225,9 +220,11 @@ class EnlyzeClient:
             request
 
         """
-
+        variables_sequence = list(variables.keys())
         start, end, appliance_uuid = validate_timeseries_arguments(
-            start, end, variables
+            start,
+            end,
+            variables_sequence,
         )
         validate_resampling_interval(resampling_interval)
 
@@ -239,10 +236,10 @@ class EnlyzeClient:
                 "start_datetime": start.isoformat(),
                 "end_datetime": end.isoformat(),
                 "variables": ",".join(
-                    f"{v.uuid}"
+                    f"{k.uuid}"
                     f"{VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR}"
-                    f"{v.resampling_method}"
-                    for v in variables
+                    f"{v.value}"
+                    for k, v in variables.items()
                 ),
                 "resampling_interval": resampling_interval,
             },
@@ -255,5 +252,5 @@ class EnlyzeClient:
         return timeseries_data.to_user_model(
             start=start,
             end=end,
-            variables=variables,
+            variables=variables_sequence,
         )

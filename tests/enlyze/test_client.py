@@ -106,17 +106,17 @@ def test_get_variables(appliance, var1, var2):
 
 
 @pytest.mark.parametrize(
-    "variable_strategy,timeseries_call",
+    "variable_strategy,timeseries_call,resampling_method_strategy",
     [
         (
             st.builds(user_models.Variable, data_type=st.just("INTEGER")),
             "without_resampling",
+            st.none(),
         ),
         (
-            st.builds(
-                user_models.VariableWithResamplingMethod, data_type=st.just("INTEGER")
-            ),
+            st.builds(user_models.Variable, data_type=st.just("INTEGER")),
             "with_resampling",
+            st.sampled_from(user_models.ResamplingMethod),
         ),
     ],
 )
@@ -132,7 +132,15 @@ def test_get_variables(appliance, var1, var2):
         min_size=2,
     ),
 )
-def test_get_timeseries(start, end, data, variable_strategy, timeseries_call, records):
+def test_get_timeseries(
+    start,
+    end,
+    data,
+    variable_strategy,
+    timeseries_call,
+    resampling_method_strategy,
+    records,
+):
     client = make_client()
     variable = data.draw(variable_strategy)
 
@@ -158,8 +166,9 @@ def test_get_timeseries(start, end, data, variable_strategy, timeseries_call, re
         if timeseries_call == "without_resampling":
             timeseries = client.get_timeseries(start, end, [variable])
         else:
+            resampling_method = data.draw(resampling_method_strategy)
             timeseries = client.get_timeseries_with_resampling(
-                start, end, [variable], resampling_interval=10
+                start, end, {variable: resampling_method}, resampling_interval=10
             )
         assert len(timeseries) == len(records)
 
@@ -188,17 +197,17 @@ def test_get_timeseries(start, end, data, variable_strategy, timeseries_call, re
     ],
 )
 @pytest.mark.parametrize(
-    "variable_strategy,timeseries_call",
+    "variable_strategy,timeseries_call,resampling_method_strategy",
     [
         (
             st.builds(user_models.Variable, data_type=st.just("INTEGER")),
             "without_resampling",
+            st.none(),
         ),
         (
-            st.builds(
-                user_models.VariableWithResamplingMethod, data_type=st.just("INTEGER")
-            ),
+            st.builds(user_models.Variable, data_type=st.just("INTEGER")),
             "with_resampling",
+            st.sampled_from(user_models.ResamplingMethod),
         ),
     ],
 )
@@ -206,7 +215,7 @@ def test_get_timeseries(start, end, data, variable_strategy, timeseries_call, re
     data_strategy=st.data(),
 )
 def test_get_timeseries_returns_none_on_empty_response(
-    data_strategy, variable_strategy, timeseries_call, data
+    data_strategy, variable_strategy, timeseries_call, resampling_method_strategy, data
 ):
     variable = data_strategy.draw(variable_strategy)
     client = make_client()
@@ -219,9 +228,10 @@ def test_get_timeseries_returns_none_on_empty_response(
                 is None
             )
         else:
+            resampling_method = data_strategy.draw(resampling_method_strategy)
             assert (
                 client.get_timeseries_with_resampling(
-                    datetime.now(), datetime.now(), [variable], 10
+                    datetime.now(), datetime.now(), {variable: resampling_method}, 10
                 )
                 is None
             )

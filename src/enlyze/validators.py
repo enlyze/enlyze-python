@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timezone
+from typing import Sequence
 
 import enlyze.models as user_models
 from enlyze.constants import MINIMUM_RESAMPLING_INTERVAL
@@ -26,7 +27,7 @@ def _ensure_datetime_aware(dt: datetime) -> datetime:
 def validate_timeseries_arguments(
     start: datetime,
     end: datetime,
-    variables: user_models.VariableOrVariableWithResamplingMethodSequence,
+    variables: Sequence[user_models.Variable],
 ) -> tuple[datetime, datetime, str]:
     if not variables:
         raise EnlyzeError("Need to request at least one variable")

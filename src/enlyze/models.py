@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from enum import Enum
 from itertools import chain
-from typing import Any, Iterator, Optional, Sequence, Union
+from typing import Any, Iterator, Optional, Sequence
 from uuid import UUID
 
 import pandas
@@ -104,19 +104,6 @@ class Variable:
 
 
 @dataclass(frozen=True)
-class VariableWithResamplingMethod(Variable):
-    """Similar to :class:`~Variable` with the addition of `resampling_method`. You will typically use this when trying to fetch resampled time series data using :meth:`~enlyze.client.EnlyzeClient.get_timeseries_with_resampling` to define how you want a variable to be resampled."""  # noqa: E501
-
-    #: The resampling method to use when resampling timeseries data for this variable.
-    resampling_method: ResamplingMethod
-
-
-VariableOrVariableWithResamplingMethodSequence = Union[
-    Sequence[Variable], Sequence[VariableWithResamplingMethod]
-]
-
-
-@dataclass(frozen=True)
 class TimeseriesData:
     """Result of a request for timeseries data."""
 
@@ -127,7 +114,7 @@ class TimeseriesData:
     end: datetime
 
     #: The variables for which timeseries data has been requested.
-    variables: VariableOrVariableWithResamplingMethodSequence
+    variables: Sequence[Variable]
 
     _columns: list[str]
     _records: list[Any]

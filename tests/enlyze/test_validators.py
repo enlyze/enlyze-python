@@ -7,7 +7,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from enlyze.errors import EnlyzeError, ResamplingValidationError
-from enlyze.models import Variable, VariableWithResamplingMethod
+from enlyze.models import Variable
 from enlyze.validators import (
     validate_resampling_interval,
     validate_timeseries_arguments,
@@ -17,16 +17,14 @@ from tests.conftest import (
     datetime_today_until_now_strategy,
 )
 
-variable_strategy = st.one_of(
-    st.builds(Variable), st.builds(VariableWithResamplingMethod)
-)
+VARIABLE_STRATEGY = st.builds(Variable)
 
 
 class TestValidateTimeseriesArguments:
     @given(
         start=datetime_before_today_strategy,
         end=datetime_today_until_now_strategy,
-        variable=variable_strategy,
+        variable=VARIABLE_STRATEGY,
     )
     def test_validate_timeseries_arguments(self, start, end, variable):
         start, end, appliance_uuid = validate_timeseries_arguments(
@@ -36,7 +34,7 @@ class TestValidateTimeseriesArguments:
         assert end
         assert UUID(appliance_uuid)
 
-    @given(variable=variable_strategy)
+    @given(variable=VARIABLE_STRATEGY)
     def test_validate_start_must_be_earlier_than_end(self, variable):
         end = datetime.now()
         start = end + timedelta(days=1)
@@ -54,8 +52,8 @@ class TestValidateTimeseriesArguments:
     @given(
         start=datetime_before_today_strategy,
         end=datetime_today_until_now_strategy,
-        variable1=variable_strategy,
-        variable2=variable_strategy,
+        variable1=VARIABLE_STRATEGY,
+        variable2=VARIABLE_STRATEGY,
     )
     def test_variables_with_different_appliance(self, start, end, variable1, variable2):
         with pytest.raises(EnlyzeError):

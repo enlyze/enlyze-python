@@ -14,11 +14,6 @@ Data models
 .. autoclass:: Variable()
     :members:
 
-.. autoclass:: VariableWithResamplingMethod()
-    :members:
-    :show-inheritance:
-    :inherited-members:
-
 .. autoclass:: VariableDataType()
     :members:
     :undoc-members:
