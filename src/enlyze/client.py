@@ -222,7 +222,7 @@ class EnlyzeClient:
         :returns: Timeseries data or ``None`` if the API returned no data for the
             request
 
-        """
+        """  # noqa: E501
         variables_sequence = []
         variables_query_parameter_list = []
         for variable, resampling_method in variables.items():
