@@ -191,7 +191,7 @@ class EnlyzeClient:
         variables: Mapping[user_models.Variable, user_models.ResamplingMethod],
         resampling_interval: int,
     ) -> Optional[user_models.TimeseriesData]:
-        """Get timeseries data of :ref:`variables <variable>` for a given time frame.
+        """Get resampled timeseries data of :ref:`variables <variable>` for a given time frame.
 
         Timeseries data for multiple variables can be requested at once. However, all
         variables must belong to the same appliance.
@@ -205,7 +205,9 @@ class EnlyzeClient:
             Must not be before ``end``.
         :param end: End of the time frame for which to fetch timeseries data.
         :param variables: The variables for which to fetch timeseries data along with a
-            :class:`~enlyze.models.ResamplingMethod` for each variable.
+            :class:`~enlyze.models.ResamplingMethod` for each variable. Resampling isn't
+            support for variables whose :class:`~enlyze.models.VariableDataType` is on
+            one of the `ARRAY` data types.
         :param resampling_interval: The interval in seconds to resample timeseries data
             with. Must be greater than or equal
             :const:`~enlyze.constants.MINIMUM_RESAMPLING_INTERVAL`.
