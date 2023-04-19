@@ -1,24 +1,38 @@
-import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from functools import cache
-from typing import Iterator, Optional
+from typing import Iterator, Mapping, Optional, Sequence
 from uuid import UUID
 
 import enlyze.models as user_models
 import enlyze.timeseries_api.models as api_models
+from enlyze.constants import VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR
 from enlyze.errors import EnlyzeError
 from enlyze.timeseries_api.client import TimeseriesApiClient
+from enlyze.validators import (
+    validate_resampling_interval,
+    validate_resampling_method_for_data_type,
+    validate_timeseries_arguments,
+)
 
 
-def _ensure_datetime_aware(dt: datetime) -> datetime:
-    """Make the returned datetime timezone aware.
+def _get_timeseries_data_from_pages(
+    pages: Iterator[api_models.TimeseriesData],
+) -> Optional[api_models.TimeseriesData]:
+    try:
+        timeseries_data = next(pages)
+    except StopIteration:
+        return None
 
-    Naive datetime will be assumed to be in local timezone and then converted to aware
-    datetime expressed in UTC.
+    if not timeseries_data.columns:
+        return None
 
-    """
+    if "time" not in timeseries_data.columns:
+        raise EnlyzeError("Timeseries API didn't return timestamps")
 
-    return dt.astimezone(timezone.utc)
+    for page in pages:
+        timeseries_data.extend(page)
+
+    return timeseries_data
 
 
 class EnlyzeClient:
@@ -98,7 +112,7 @@ class EnlyzeClient:
 
     def get_variables(
         self, appliance: user_models.Appliance
-    ) -> list[user_models.Variable]:
+    ) -> Sequence[user_models.Variable]:
         """Retrieve all variables of an :ref:`appliance <appliance>`.
 
         :param appliance: The appliance for which to get all variables.
@@ -109,7 +123,6 @@ class EnlyzeClient:
         :raises: |generic-error|
 
         :returns: Variables of ``appliance``
-        :rtype: list[:class:`~enlyze.models.Variable`]
 
         """
         return [
@@ -118,7 +131,10 @@ class EnlyzeClient:
         ]
 
     def get_timeseries(
-        self, start: datetime, end: datetime, variables: list[user_models.Variable]
+        self,
+        start: datetime,
+        end: datetime,
+        variables: Sequence[user_models.Variable],
     ) -> Optional[user_models.TimeseriesData]:
         """Get timeseries data of :ref:`variables <variable>` for a given time frame.
 
@@ -139,58 +155,113 @@ class EnlyzeClient:
 
         :raises: |generic-error|
 
-        :returns: Timeseries data or ``None`` if API returned no data for the request
+        :returns: Timeseries data or ``None`` if the API returned no data for the
+            request
 
         """
 
-        if start.utcoffset() is None or end.utcoffset() is None:
-            logging.warning(
-                "Passing naive datetime is discouraged, assuming local timezone."
-            )
-
-        start = _ensure_datetime_aware(start)
-        end = _ensure_datetime_aware(end)
-
-        if start > end:
-            raise EnlyzeError("Start must be earlier than end")
-
-        appliance_uuids = frozenset(v.appliance.uuid for v in variables)
-
-        if not appliance_uuids:
-            raise EnlyzeError("Need to request at least one variable")
-
-        if len(appliance_uuids) != 1:
-            raise EnlyzeError(
-                "Cannot request timeseries data for more than one appliance per request"
-            )
+        start, end, appliance_uuid = validate_timeseries_arguments(
+            start, end, variables
+        )
 
         pages = self._client.get_paginated(
             "timeseries",
             api_models.TimeseriesData,
             params={
-                "appliance": str(next(iter(appliance_uuids))),
+                "appliance": appliance_uuid,
                 "start_datetime": start.isoformat(),
                 "end_datetime": end.isoformat(),
                 "variables": ",".join(str(v.uuid) for v in variables),
             },
         )
 
-        try:
-            timeseries_data = next(pages)
-        except StopIteration:
+        timeseries_data = _get_timeseries_data_from_pages(pages)
+        if timeseries_data is None:
             return None
-
-        if not timeseries_data.columns:
-            return None
-
-        if "time" not in timeseries_data.columns:
-            raise EnlyzeError("Timeseries API didn't return timestamps")
-
-        for page in pages:
-            timeseries_data.extend(page)
 
         return timeseries_data.to_user_model(
             start=start,
             end=end,
             variables=variables,
+        )
+
+    def get_timeseries_with_resampling(
+        self,
+        start: datetime,
+        end: datetime,
+        variables: Mapping[user_models.Variable, user_models.ResamplingMethod],
+        resampling_interval: int,
+    ) -> Optional[user_models.TimeseriesData]:
+        """Get resampled timeseries data of :ref:`variables <variable>` for a given time frame.
+
+        Timeseries data for multiple variables can be requested at once. However, all
+        variables must belong to the same appliance.
+
+        You should always pass :ref:`timezone-aware datetime
+        <python:datetime-naive-aware>` objects to this method! If you don't, naive
+        datetime objects will be assumed to be expressed in the local timezone of the
+        system where the code is run.
+
+        :param start: Beginning of the time frame for which to fetch timeseries data.
+            Must not be before ``end``.
+        :param end: End of the time frame for which to fetch timeseries data.
+        :param variables: The variables for which to fetch timeseries data along with a
+            :class:`~enlyze.models.ResamplingMethod` for each variable. Resampling isn't
+            supported for variables whose :class:`~enlyze.models.VariableDataType` is
+            one of the `ARRAY` data types.
+        :param resampling_interval: The interval in seconds to resample timeseries data
+            with. Must be greater than or equal
+            :const:`~enlyze.constants.MINIMUM_RESAMPLING_INTERVAL`.
+
+        :raises: |token-error|
+
+        :raises: |resampling-error|
+
+        :raises: |generic-error|
+
+        :returns: Timeseries data or ``None`` if the API returned no data for the
+            request
+
+        """  # noqa: E501
+        variables_sequence = []
+        variables_query_parameter_list = []
+        for variable, resampling_method in variables.items():
+            variables_sequence.append(variable)
+            variables_query_parameter_list.append(
+                f"{variable.uuid}"
+                f"{VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR}"
+                f"{resampling_method.value}"
+            )
+
+            validate_resampling_method_for_data_type(
+                resampling_method, variable.data_type
+            )
+
+        start, end, appliance_uuid = validate_timeseries_arguments(
+            start,
+            end,
+            variables_sequence,
+        )
+        validate_resampling_interval(resampling_interval)
+
+        pages = self._client.get_paginated(
+            "timeseries",
+            api_models.TimeseriesData,
+            params={
+                "appliance": appliance_uuid,
+                "start_datetime": start.isoformat(),
+                "end_datetime": end.isoformat(),
+                "variables": ",".join(variables_query_parameter_list),
+                "resampling_interval": resampling_interval,
+            },
+        )
+
+        timeseries_data = _get_timeseries_data_from_pages(pages)
+        if timeseries_data is None:
+            return None
+
+        return timeseries_data.to_user_model(
+            start=start,
+            end=end,
+            variables=variables_sequence,
         )

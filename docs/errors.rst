@@ -7,3 +7,6 @@ Errors
 
 .. autoclass:: InvalidTokenError
     :show-inheritance:
+
+.. autoclass:: ResamplingValidationError
+    :show-inheritance:

@@ -19,7 +19,7 @@ dynamic = [
 ]
 dependencies = [
   "httpx",
-  "pandas",
+  "pandas>=2",
   "pydantic",
 ]
 [project.optional-dependencies]

@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -77,7 +77,10 @@ class TimeseriesData(TimeseriesApiModel):
         self.records.extend(other.records)
 
     def to_user_model(
-        self, start: datetime, end: datetime, variables: list[user_models.Variable]
+        self,
+        start: datetime,
+        end: datetime,
+        variables: Sequence[user_models.Variable],
     ) -> user_models.TimeseriesData:
         return user_models.TimeseriesData(
             start=start,

@@ -20,3 +20,7 @@ Data models
 
 .. autoclass:: TimeseriesData()
     :members:
+
+.. autoclass:: ResamplingMethod()
+    :members:
+    :undoc-members:

@@ -18,3 +18,13 @@ class InvalidTokenError(EnlyzeError):
     - Note: you can **not** use your password as a token
 
     """
+
+
+class ResamplingValidationError(EnlyzeError):
+    """Invalid request for resampling
+
+    Timeseries data could not be requested from the ENLYZE platform. This may happen
+    when a resampling method is incompatible with the variable data type or an invalid
+    resampling interval is specified.
+
+    """

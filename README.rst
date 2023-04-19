@@ -45,3 +45,22 @@ Running `mypy`
 .. code-block:: console
 
     $ tox -e mypy
+
+Generating the documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: console
+
+    $ tox -e docs
+
+Note that this requires the `Enchant C library
+<https://pyenchant.github.io/pyenchant/install.html>` to be installed.
+
+*Note for M1 users, the* ``Enchant`` *library doesn't work out of the box and the
+workaround in the official docs is brittle, I suggest installing the library from*
+``homebrew`` *and setting the environment variable* ``PYENCHANT_LIBRARY_PATH`` *like
+so:*
+
+.. code-block:: console
+
+    $ export PYENCHANT_LIBRARY_PATH=/opt/homebrew/lib/libenchant-2.dylib

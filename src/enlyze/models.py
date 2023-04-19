@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from enum import Enum
 from itertools import chain
-from typing import Any, Iterator, Optional
+from typing import Any, Iterator, Optional, Sequence
 from uuid import UUID
 
 import pandas
@@ -66,6 +66,19 @@ class VariableDataType(str, Enum):
     ARRAY_STRING = "ARRAY_STRING"
 
 
+class ResamplingMethod(str, Enum):
+    """Resampling method to be used when resampling timeseries data."""
+
+    FIRST = "first"
+    LAST = "last"
+    MAX = "max"
+    MIN = "min"
+    COUNT = "count"
+    SUM = "sum"
+    AVG = "avg"
+    MEDIAN = "median"
+
+
 @dataclass(frozen=True)
 class Variable:
     """Representation of a :ref:`variable <variable>` in the ENLYZE platform.
@@ -101,7 +114,7 @@ class TimeseriesData:
     end: datetime
 
     #: The variables for which timeseries data has been requested.
-    variables: list[Variable]
+    variables: Sequence[Variable]
 
     _columns: list[str]
     _records: list[Any]
@@ -182,5 +195,5 @@ class TimeseriesData:
             columns=[time_column] + variable_columns,
             index="time",
         )
-        df.index = pandas.to_datetime(df.index, utc=True)
+        df.index = pandas.to_datetime(df.index, utc=True, format="ISO8601")
         return df

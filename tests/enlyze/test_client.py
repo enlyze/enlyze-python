@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 import httpx
 import pytest
@@ -12,6 +12,10 @@ from enlyze.client import EnlyzeClient
 from enlyze.constants import ENLYZE_BASE_URL, TIMESERIES_API_SUB_PATH
 from enlyze.errors import EnlyzeError
 from enlyze.timeseries_api.client import _PaginatedResponse
+from tests.conftest import (
+    datetime_before_today_strategy,
+    datetime_today_until_now_strategy,
+)
 
 
 class PaginatedResponse(httpx.Response):
@@ -21,18 +25,6 @@ class PaginatedResponse(httpx.Response):
             text=_PaginatedResponse(data=data, next=next).json(),
             headers={"Content-Type": "application/json"},
         )
-
-
-datetime_today_until_now_strategy = st.datetimes(
-    min_value=datetime.utcnow().replace(hour=0),
-    max_value=datetime.utcnow(),
-    timezones=st.just(timezone.utc),
-)
-
-datetime_before_today_strategy = st.datetimes(
-    max_value=datetime.utcnow().replace(hour=0),
-    timezones=st.just(timezone.utc),
-)
 
 
 def respx_mock_with_base_url() -> respx.MockRouter:
@@ -113,10 +105,25 @@ def test_get_variables(appliance, var1, var2):
     ]
 
 
+@pytest.mark.parametrize(
+    "variable_strategy,timeseries_call,resampling_method_strategy",
+    [
+        (
+            st.builds(user_models.Variable, data_type=st.just("INTEGER")),
+            "without_resampling",
+            st.none(),
+        ),
+        (
+            st.builds(user_models.Variable, data_type=st.just("INTEGER")),
+            "with_resampling",
+            st.sampled_from(user_models.ResamplingMethod),
+        ),
+    ],
+)
 @given(
     start=datetime_before_today_strategy,
     end=datetime_today_until_now_strategy,
-    variable=st.builds(user_models.Variable, data_type=st.just("INTEGER")),
+    data=st.data(),
     records=st.lists(
         st.tuples(
             datetime_today_until_now_strategy.map(datetime.isoformat),
@@ -125,8 +132,17 @@ def test_get_variables(appliance, var1, var2):
         min_size=2,
     ),
 )
-def test_get_timeseries(start, end, variable, records):
+def test_get_timeseries(
+    start,
+    end,
+    data,
+    variable_strategy,
+    timeseries_call,
+    resampling_method_strategy,
+    records,
+):
     client = make_client()
+    variable = data.draw(variable_strategy)
 
     with respx_mock_with_base_url() as mock:
         mock.get("timeseries", params="offset=1").mock(
@@ -147,8 +163,13 @@ def test_get_timeseries(start, end, variable, records):
                 next=str(request.url.join("?offset=1")),
             )
         )
-
-        timeseries = client.get_timeseries(start, end, [variable])
+        if timeseries_call == "without_resampling":
+            timeseries = client.get_timeseries(start, end, [variable])
+        else:
+            resampling_method = data.draw(resampling_method_strategy)
+            timeseries = client.get_timeseries_with_resampling(
+                start, end, {variable: resampling_method}, resampling_interval=10
+            )
         assert len(timeseries) == len(records)
 
     assert f"{len(records)} records" in str(timeseries)
@@ -175,15 +196,45 @@ def test_get_timeseries(start, end, variable, records):
         api_models.TimeseriesData(columns=[], records=[]).dict(),
     ],
 )
-@given(
-    variable=st.builds(user_models.Variable),
+@pytest.mark.parametrize(
+    "variable_strategy,timeseries_call,resampling_method_strategy",
+    [
+        (
+            st.builds(user_models.Variable, data_type=st.just("INTEGER")),
+            "without_resampling",
+            st.none(),
+        ),
+        (
+            st.builds(user_models.Variable, data_type=st.just("INTEGER")),
+            "with_resampling",
+            st.sampled_from(user_models.ResamplingMethod),
+        ),
+    ],
 )
-def test_get_timeseries_returns_none_on_empty_response(variable, data):
+@given(
+    data_strategy=st.data(),
+)
+def test_get_timeseries_returns_none_on_empty_response(
+    data_strategy, variable_strategy, timeseries_call, resampling_method_strategy, data
+):
+    variable = data_strategy.draw(variable_strategy)
     client = make_client()
 
     with respx_mock_with_base_url() as mock:
         mock.get("timeseries").mock(PaginatedResponse(data=data))
-        assert client.get_timeseries(datetime.now(), datetime.now(), [variable]) is None
+        if timeseries_call == "without_resampling":
+            assert (
+                client.get_timeseries(datetime.now(), datetime.now(), [variable])
+                is None
+            )
+        else:
+            resampling_method = data_strategy.draw(resampling_method_strategy)
+            assert (
+                client.get_timeseries_with_resampling(
+                    datetime.now(), datetime.now(), {variable: resampling_method}, 10
+                )
+                is None
+            )
 
 
 def test_get_timeseries_raises_no_variables():
