@@ -10,6 +10,7 @@ from enlyze.errors import EnlyzeError
 from enlyze.timeseries_api.client import TimeseriesApiClient
 from enlyze.validators import (
     validate_resampling_interval,
+    validate_resampling_method_for_data_type,
     validate_timeseries_arguments,
 )
 
@@ -222,7 +223,20 @@ class EnlyzeClient:
             request
 
         """
-        variables_sequence = list(variables.keys())
+        variables_sequence = []
+        variables_query_parameter_list = []
+        for variable, resampling_method in variables.items():
+            variables_sequence.append(variable)
+            variables_query_parameter_list.append(
+                f"{variable.uuid}"
+                f"{VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR}"
+                f"{resampling_method.value}"
+            )
+
+            validate_resampling_method_for_data_type(
+                resampling_method, variable.data_type
+            )
+
         start, end, appliance_uuid = validate_timeseries_arguments(
             start,
             end,
@@ -237,12 +251,7 @@ class EnlyzeClient:
                 "appliance": appliance_uuid,
                 "start_datetime": start.isoformat(),
                 "end_datetime": end.isoformat(),
-                "variables": ",".join(
-                    f"{k.uuid}"
-                    f"{VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR}"
-                    f"{v.value}"
-                    for k, v in variables.items()
-                ),
+                "variables": ",".join(variables_query_parameter_list),
                 "resampling_interval": resampling_interval,
             },
         )
