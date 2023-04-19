@@ -7,9 +7,11 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from enlyze.errors import EnlyzeError, ResamplingValidationError
-from enlyze.models import Variable
+from enlyze.models import ResamplingMethod, Variable, VariableDataType
 from enlyze.validators import (
+    VARIABLE_ARRAY_DATA_TYPES,
     validate_resampling_interval,
+    validate_resampling_method_for_data_type,
     validate_timeseries_arguments,
 )
 from tests.conftest import (
@@ -76,3 +78,64 @@ class TestValidateTimeseriesArguments:
 def test_validate_resampling_interval(resampling_interval, expectation):
     with expectation:
         validate_resampling_interval(resampling_interval)
+
+
+@pytest.mark.parametrize(
+    "resampling_method_strategy,data_type_strategy,expectation",
+    [
+        (
+            st.sampled_from(ResamplingMethod),
+            st.sampled_from(VARIABLE_ARRAY_DATA_TYPES),
+            pytest.raises(ResamplingValidationError),
+        ),
+        (
+            st.sampled_from(
+                (ResamplingMethod.AVG, ResamplingMethod.SUM, ResamplingMethod.MEDIAN)
+            ),
+            st.sampled_from((VariableDataType.BOOLEAN, VariableDataType.STRING)),
+            pytest.raises(ResamplingValidationError),
+        ),
+        (
+            st.sampled_from(ResamplingMethod),
+            st.sampled_from(
+                (
+                    VariableDataType.INTEGER,
+                    VariableDataType.FLOAT,
+                )
+            ),
+            does_not_raise(),
+        ),
+        (
+            st.sampled_from(
+                (
+                    ResamplingMethod.FIRST,
+                    ResamplingMethod.LAST,
+                    ResamplingMethod.MIN,
+                    ResamplingMethod.MAX,
+                    ResamplingMethod.COUNT,
+                )
+            ),
+            st.sampled_from(
+                (
+                    VariableDataType.BOOLEAN,
+                    VariableDataType.STRING,
+                )
+            ),
+            does_not_raise(),
+        ),
+    ],
+)
+@given(
+    data_strategy=st.data(),
+)
+def test_validate_resampling_method_for_data_type(
+    resampling_method_strategy, data_type_strategy, expectation, data_strategy
+):
+    resampling_method = data_strategy.draw(resampling_method_strategy)
+    data_type = data_strategy.draw(data_type_strategy)
+
+    with expectation:
+        assert (
+            validate_resampling_method_for_data_type(resampling_method, data_type)
+            is None
+        )
