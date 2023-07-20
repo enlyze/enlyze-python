@@ -1,5 +1,5 @@
 from dataclasses import asdict, dataclass
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from enum import Enum
 from itertools import chain
 from typing import Any, Iterator, Optional, Sequence
@@ -200,55 +200,23 @@ class TimeseriesData:
 
 
 @dataclass(frozen=True)
-class Quantities:
-    """Container of computed or synced quantities produced."""
+class ProductivityMetric:
+    #: TODO
+    percentage: float
 
-    #: The physical unit of the quantities.
-    unit: Optional[str]
-
-    #: The total quantity of product produced. This is the sum of scrap and yield.
-    total: Optional[float]
-
-    #: The quantity of product produced that has met the quality criteria.
-    yield_: Optional[float]
-
-    #: The quantity of scrap produced.
-    scrap: Optional[float]
+    #: Time lost due to non-ideal conditions
+    time_loss: timedelta
 
 
 @dataclass(frozen=True)
-class Metrics:
-    """Container of computed (productivity) metrics."""
-
-    #: Productivity percentage calculated by the ENLYZE Platform.
-    productivity_percentage: Optional[float]
-
-    #: The aggregate unproductive time in seconds due to scrap production,
-    #  downtimes and producing slower than the golden run.
-    productivity_timeloss: Optional[int]
-
-    #: Availability percentage calculated by the ENLYZE Platform.
-    availability_percentage: Optional[float]
-
-    #: The number of seconds lost due to downtimes.
-    availability_timeloss: Optional[int]
-
-    #: Performance percentage calculated by the ENLYZE Platform.
-    performance_percentage: Optional[float]
-
-    #: The number of seconds lost due to lower throughput compared to the golden run.
-    performance_timeloss: Optional[int]
-
-    #: Quality percentage calculated by the ENLYZE Platform.
-    quality_percentage: Optional[float]
-
-    #: The number of seconds lost due to producing scrap.
-    quality_timeloss: Optional[int]
+class Quantity:
+    value: float
+    unit: str
 
 
 @dataclass(frozen=True)
 class ProductionRun:
-    """Representation of an :ref:`production run <production run>` in the ENLYZE platform.
+    """Representation of an  in the ENLYZE platform.
 
     Contains details about the production run.
 
@@ -272,11 +240,26 @@ class ProductionRun:
     #: The end of the production run.
     end: Optional[datetime]
 
-    #: Quantities produced during the production run.
-    quantities: Optional[Quantities] = Quantities()
+    #: The total quantity of product produced within the production run. This is the sum of scrap and yield.
+    quantity_total: Optional[Quantity]
 
-    #: Productivity metrics of the production run
-    metrics: Optional[Metrics] = Metrics()
+    #: The quantity of scrap produced during the production run.
+    quantity_scrap: Optional[Quantity]
+
+    #: The quantity of product produced during the production run that has met the quality criteria.
+    quantity_yield: Optional[Quantity]
+
+    #: OEE component that reflects when the appliance did not produce
+    availability: Optional[ProductivityMetric]
+
+    #: OEE component that reflects how fast the appliance has run
+    performance: Optional[ProductivityMetric]
+
+    #: OEE component that reflects how much of the produced product can be sold
+    quality: Optional[ProductivityMetric]
+
+    #: aggregate OEE metrics that comprises availability, performance and quality
+    productivity: Optional[ProductivityMetric]
 
 
 class ProductionRuns(list):
