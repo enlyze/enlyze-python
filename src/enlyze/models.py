@@ -1,5 +1,5 @@
 from dataclasses import asdict, dataclass
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from enum import Enum
 from itertools import chain
 from typing import Any, Iterator, Optional, Sequence
@@ -200,55 +200,37 @@ class TimeseriesData:
 
 
 @dataclass(frozen=True)
-class Quantities:
-    """Container of computed or synced quantities produced."""
+class OEEScore:
+    """Individual Overall Equipment Effectiveness (OEE) score
 
-    #: The physical unit of the quantities.
-    unit: Optional[str]
+    This is calculated by the ENLYZE Platform based on a combination of real
+    machine data and production order booking information provided by the
+    customer.
 
-    #: The total quantity of product produced. This is the sum of scrap and yield.
-    total: Optional[float]
+    For more information, please check out https://www.oee.com
+    """
 
-    #: The quantity of product produced that has met the quality criteria.
-    yield_: Optional[float]
+    #: The score is expressed as a ratio between 0 and 1.0, with 1.0 meaning 100 %.
+    score: float
 
-    #: The quantity of scrap produced.
-    scrap: Optional[float]
+    #: Unproductive time due to non-ideal production.
+    time_loss: timedelta
 
 
 @dataclass(frozen=True)
-class Metrics:
-    """Container of computed (productivity) metrics."""
+class Quantity:
+    """Representation of a physical quantity"""
 
-    #: Productivity percentage calculated by the ENLYZE Platform.
-    productivity_percentage: Optional[float]
+    #: Physical unit of quantity
+    unit: str
 
-    #: The aggregate unproductive time in seconds due to scrap production,
-    #  downtimes and producing slower than the golden run.
-    productivity_timeloss: Optional[int]
-
-    #: Availability percentage calculated by the ENLYZE Platform.
-    availability_percentage: Optional[float]
-
-    #: The number of seconds lost due to downtimes.
-    availability_timeloss: Optional[int]
-
-    #: Performance percentage calculated by the ENLYZE Platform.
-    performance_percentage: Optional[float]
-
-    #: The number of seconds lost due to lower throughput compared to the golden run.
-    performance_timeloss: Optional[int]
-
-    #: Quality percentage calculated by the ENLYZE Platform.
-    quality_percentage: Optional[float]
-
-    #: The number of seconds lost due to producing scrap.
-    quality_timeloss: Optional[int]
+    #: The quantity expressed in `unit`
+    value: float
 
 
 @dataclass(frozen=True)
 class ProductionRun:
-    """Representation of an :ref:`production run <production run>` in the ENLYZE platform.
+    """Representation of a production run in the ENLYZE platform.
 
     Contains details about the production run.
 
@@ -272,14 +254,29 @@ class ProductionRun:
     #: The end of the production run.
     end: Optional[datetime]
 
-    #: Quantities produced during the production run.
-    quantities: Optional[Quantities] = Quantities()
+    #: This is the sum of scrap and yield.
+    quantity_total: Optional[Quantity]
 
-    #: Productivity metrics of the production run
-    metrics: Optional[Metrics] = Metrics()
+    #: The amount of product produced that doesn't meet quality criteria.
+    quantity_scrap: Optional[Quantity]
+
+    #: The amount of product produced that can be sold.
+    quantity_yield: Optional[Quantity]
+
+    #: OEE component that reflects when the appliance did not produce.
+    availability: Optional[OEEScore]
+
+    #: OEE component that reflects how fast the appliance has run.
+    performance: Optional[OEEScore]
+
+    #: OEE component that reflects how much defects have been produced.
+    quality: Optional[OEEScore]
+
+    #: Aggregate OEE score that comprises availability, performance and quality.
+    productivity: Optional[OEEScore]
 
 
-class ProductionRuns(list):
+class ProductionRuns(list[ProductionRun]):
     """Representation of multiple :ref:`production runs <production run>`"""
 
     def to_dataframe(self) -> pandas.DataFrame:
