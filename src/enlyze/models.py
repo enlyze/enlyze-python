@@ -201,44 +201,45 @@ class TimeseriesData:
 
 @dataclass(frozen=True)
 class Quantities:
-    """Container of computed or synced quantities produced within a production run."""
+    """Container of computed or synced quantities produced."""
 
     #: The physical unit of the quantities.
     unit: Optional[str]
 
-    #: The total quantity of product produced within the production run. This is the sum of scrap and yield.
+    #: The total quantity of product produced. This is the sum of scrap and yield.
     total: Optional[float]
 
-    #: The quantity of product produced during the production run that has met the quality criteria.
+    #: The quantity of product produced that has met the quality criteria.
     yield_: Optional[float]
 
-    #: The quantity of scrap produced during the production run.
+    #: The quantity of scrap produced.
     scrap: Optional[float]
 
 
 @dataclass(frozen=True)
 class Metrics:
-    """Container of computed (productivity) metrics for a production run."""
+    """Container of computed (productivity) metrics."""
 
-    #: Productivity percentage of the production run calculated by the ENLYZE Platform.
+    #: Productivity percentage calculated by the ENLYZE Platform.
     productivity_percentage: Optional[float]
 
-    #: The aggregate unproductive time in seconds due to scrap production, downtimes and producing slower than the golden run.
+    #: The aggregate unproductive time in seconds due to scrap production,
+    #  downtimes and producing slower than the golden run.
     productivity_timeloss: Optional[int]
 
-    #: Availability percentage of the production run calculated by the ENLYZE Platform.
+    #: Availability percentage calculated by the ENLYZE Platform.
     availability_percentage: Optional[float]
 
     #: The number of seconds lost due to downtimes.
     availability_timeloss: Optional[int]
 
-    #: Performance percentage of the production run calculated by the ENLYZE Platform.
+    #: Performance percentage calculated by the ENLYZE Platform.
     performance_percentage: Optional[float]
 
     #: The number of seconds lost due to lower throughput compared to the golden run.
     performance_timeloss: Optional[int]
 
-    #: Quality percentage of the production run calculated by the ENLYZE Platform.
+    #: Quality percentage calculated by the ENLYZE Platform.
     quality_percentage: Optional[float]
 
     #: The number of seconds lost due to producing scrap.
