@@ -230,7 +230,8 @@ class Quantity:
 
 @dataclass(frozen=True)
 class ProductionRun:
-    """Representation of a production run in the ENLYZE platform.
+    """Representation of a :ref:`production run <production_run>` in the ENLYZE
+    platform.
 
     Contains details about the production run.
 
@@ -277,7 +278,7 @@ class ProductionRun:
 
 
 class ProductionRuns(list[ProductionRun]):
-    """Representation of multiple :ref:`production runs <production run>`"""
+    """Representation of multiple :ref:`production runs <production_run>`."""
 
     def to_dataframe(self) -> pandas.DataFrame:
         """Convert production runs into :py:class:`pandas.DataFrame`
@@ -287,7 +288,7 @@ class ProductionRuns(list[ProductionRun]):
         represented as :ref:`timezone-aware <python:datetime-naive-aware>`
         :py:class:`datetime.datetime` localized in UTC.
 
-        :returns: DataFrame with production runsthat consists of
+        :returns: DataFrame with production runs
 
         """
 
