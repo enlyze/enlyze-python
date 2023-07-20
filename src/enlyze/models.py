@@ -273,10 +273,10 @@ class ProductionRun:
     end: Optional[datetime]
 
     #: Quantities produced during the production run.
-    quantities: Optional[Quantities]
+    quantities: Optional[Quantities] = Quantities()
 
     #: Productivity metrics of the production run
-    metrics: Optional[Metrics]
+    metrics: Optional[Metrics] = Metrics()
 
 
 class ProductionRuns(list):
