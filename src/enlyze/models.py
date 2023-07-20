@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import date, datetime, timezone
 from enum import Enum
 from itertools import chain
@@ -196,4 +196,104 @@ class TimeseriesData:
             index="time",
         )
         df.index = pandas.to_datetime(df.index, utc=True, format="ISO8601")
+        return df
+
+
+@dataclass(frozen=True)
+class Quantities:
+    """Container of computed or synced quantities produced within a production run."""
+
+    #: The physical unit of the quantities.
+    unit: Optional[str]
+
+    #: The total quantity of product produced within the production run. This is the sum of scrap and yield.
+    total: Optional[float]
+
+    #: The quantity of product produced during the production run that has met the quality criteria.
+    yield_: Optional[float]
+
+    #: The quantity of scrap produced during the production run.
+    scrap: Optional[float]
+
+
+@dataclass(frozen=True)
+class Metrics:
+    """Container of computed (productivity) metrics for a production run."""
+
+    #: Productivity percentage of the production run calculated by the ENLYZE Platform.
+    productivity_percentage: Optional[float]
+
+    #: The aggregate unproductive time in seconds due to scrap production, downtimes and producing slower than the golden run.
+    productivity_timeloss: Optional[int]
+
+    #: Availability percentage of the production run calculated by the ENLYZE Platform.
+    availability_percentage: Optional[float]
+
+    #: The number of seconds lost due to downtimes.
+    availability_timeloss: Optional[int]
+
+    #: Performance percentage of the production run calculated by the ENLYZE Platform.
+    performance_percentage: Optional[float]
+
+    #: The number of seconds lost due to lower throughput compared to the golden run.
+    performance_timeloss: Optional[int]
+
+    #: Quality percentage of the production run calculated by the ENLYZE Platform.
+    quality_percentage: Optional[float]
+
+    #: The number of seconds lost due to producing scrap.
+    quality_timeloss: Optional[int]
+
+
+@dataclass(frozen=True)
+class ProductionRun:
+    """Representation of an :ref:`production run <production run>` in the ENLYZE platform.
+
+    Contains details about the production run.
+
+    """
+
+    #: The UUID of the appliance the production run was exeucted on.
+    appliance: UUID
+
+    #: The average throughput of the production run excluding downtimes.
+    average_throughput: Optional[float]
+
+    #: The identifier of the production order.
+    production_order: str
+
+    #: The identifier of the product that was produced.
+    product: str
+
+    #: The begin of the production run.
+    begin: datetime
+
+    #: The end of the production run.
+    end: Optional[datetime]
+
+    #: Quantities produced during the production run.
+    quantities: Optional[Quantities]
+
+    #: Productivity metrics of the production run
+    metrics: Optional[Metrics]
+
+
+class ProductionRuns(list):
+    """Representation of multiple :ref:`production runs <production run>`"""
+
+    def to_dataframe(self) -> pandas.DataFrame:
+        """Convert production runs into :py:class:`pandas.DataFrame`
+
+        Each row in the data frame will represent one production run.
+        The ``begin`` and ``end`` of every production run will be
+        represented as :ref:`timezone-aware <python:datetime-naive-aware>`
+        :py:class:`datetime.datetime` localized in UTC.
+
+        :returns: DataFrame with production runsthat consists of
+
+        """
+
+        df = pandas.json_normalize([asdict(run) for run in self])
+        df.begin = pandas.to_datetime(df.begin, utc=True, format="ISO8601")
+        df.end = pandas.to_datetime(df.end, utc=True, format="ISO8601")
         return df
