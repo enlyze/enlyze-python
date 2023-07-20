@@ -200,23 +200,37 @@ class TimeseriesData:
 
 
 @dataclass(frozen=True)
-class ProductivityMetric:
-    #: TODO
-    percentage: float
+class OEEScore:
+    """Individual Overall Equipment Effectiveness (OEE) score
 
-    #: Time lost due to non-ideal conditions
+    This is calculated by the ENLYZE Platform based on a combination of real
+    machine data and production order booking information provided by the
+    customer.
+
+    For more information, please check out https://www.oee.com
+    """
+
+    #: The score is expressed as a ratio between 0 and 1.0, with 1.0 meaning 100 %.
+    score: float
+
+    #: Unproductive time due to non-ideal production.
     time_loss: timedelta
 
 
 @dataclass(frozen=True)
 class Quantity:
-    value: float
+    """Representation of a physical quantity"""
+
+    #: Physical unit of quantity
     unit: str
+
+    #: The quantity expressed in `unit`
+    value: float
 
 
 @dataclass(frozen=True)
 class ProductionRun:
-    """Representation of an  in the ENLYZE platform.
+    """Representation of a production run in the ENLYZE platform.
 
     Contains details about the production run.
 
@@ -240,29 +254,29 @@ class ProductionRun:
     #: The end of the production run.
     end: Optional[datetime]
 
-    #: The total quantity of product produced within the production run. This is the sum of scrap and yield.
+    #: This is the sum of scrap and yield.
     quantity_total: Optional[Quantity]
 
-    #: The quantity of scrap produced during the production run.
+    #: The amount of product produced that doesn't meet quality criteria.
     quantity_scrap: Optional[Quantity]
 
-    #: The quantity of product produced during the production run that has met the quality criteria.
+    #: The amount of product produced that can be sold.
     quantity_yield: Optional[Quantity]
 
-    #: OEE component that reflects when the appliance did not produce
-    availability: Optional[ProductivityMetric]
+    #: OEE component that reflects when the appliance did not produce.
+    availability: Optional[OEEScore]
 
-    #: OEE component that reflects how fast the appliance has run
-    performance: Optional[ProductivityMetric]
+    #: OEE component that reflects how fast the appliance has run.
+    performance: Optional[OEEScore]
 
-    #: OEE component that reflects how much of the produced product can be sold
-    quality: Optional[ProductivityMetric]
+    #: OEE component that reflects how much defects have been produced.
+    quality: Optional[OEEScore]
 
-    #: aggregate OEE metrics that comprises availability, performance and quality
-    productivity: Optional[ProductivityMetric]
+    #: Aggregate OEE score that comprises availability, performance and quality.
+    productivity: Optional[OEEScore]
 
 
-class ProductionRuns(list):
+class ProductionRuns(list[ProductionRun]):
     """Representation of multiple :ref:`production runs <production run>`"""
 
     def to_dataframe(self) -> pandas.DataFrame:
