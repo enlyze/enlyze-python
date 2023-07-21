@@ -40,8 +40,8 @@ Production Order
 ----------------
 
 A *production order* represents the goal of producing a certain quantity of a
-given :ref:`product <product>`. Production orders are usually created in an ERP
-system or MES of the customer and then synchronized into the ENLYZE platform.
+given :ref:`product <product>`. Production orders are usually created in an external ERP
+system or MES and then synchronized into the ENLYZE platform.
 They are referenced by an identifier which oftentimes is a short combination of
 numbers and/or characters, like FA23000123 or 332554.
 
