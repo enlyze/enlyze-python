@@ -75,7 +75,7 @@ A *product* is the output of the production process which is executed by an
 <production_order>`. In the real world, an appliance might have some additonal
 outputs, but only the main output (the product) modelled in the ENLYZE platform.
 Similarly to the production order, a product is referenced by an identifier
-originating from a system of the customer, which is synchronized into the ENLYZE
+originating from a customer system, which is synchronized into the ENLYZE
 platform.
 
 During the integration into the ENLYZE platform, the product identifier is
