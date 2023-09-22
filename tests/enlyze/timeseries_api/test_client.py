@@ -101,26 +101,26 @@ def test_timeseries_api_get_paginated_raises_invalid_pagination_schema(
 
 @respx.mock
 def test_timeseries_api_get_paginated_raises_invalid_data_schema(client):
-    respx.get("").respond(json={"data": [42, 1337]})
+    respx.get("").respond(json={"data": [42, 1337], "next": None})
     with pytest.raises(EnlyzeError, match="API returned an unparsable"):
         list(client.get_paginated("", TimeseriesApiModel))
 
 
 @respx.mock
 def test_timeseries_api_get_paginated_data_empty(client, string_model):
-    respx.get("").respond(json={"data": []})
+    respx.get("").respond(json={"data": [], "next": None})
     assert list(client.get_paginated("", string_model)) == []
 
 
 @respx.mock
 def test_timeseries_api_get_paginated_single_page(client, string_model):
-    respx.get("").respond(json={"data": ["a", "b"]})
+    respx.get("").respond(json={"data": ["a", "b"], "next": None})
     assert list(client.get_paginated("", string_model)) == ["a", "b"]
 
 
 @respx.mock
 def test_timeseries_api_get_paginated_multi_page(client, string_model):
-    respx.get("", params="offset=1").respond(json={"data": ["z"]})
+    respx.get("", params="offset=1").respond(json={"data": ["z"], "next": None})
     respx.get("").mock(
         side_effect=lambda request: httpx.Response(
             200,
