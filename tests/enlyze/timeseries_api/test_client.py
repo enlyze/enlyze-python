@@ -7,16 +7,16 @@ import respx
 from hypothesis import given
 from hypothesis import strategies as st
 
+from enlyze.api_clients.timeseries.models import TimeseriesApiModel
 from enlyze.constants import ENLYZE_BASE_URL, TIMESERIES_API_SUB_PATH
 from enlyze.errors import EnlyzeError, InvalidTokenError
 from enlyze.timeseries_api.client import TimeseriesApiClient
-from enlyze.timeseries_api.models import TimeseriesApiModel
 
 
 @pytest.fixture
 def string_model():
     with mock.patch(
-        "enlyze.timeseries_api.models.TimeseriesApiModel.parse_obj",
+        "enlyze.api_clients.timeseries.models.TimeseriesApiModel.parse_obj",
         side_effect=lambda o: str(o),
     ):
         yield TimeseriesApiModel

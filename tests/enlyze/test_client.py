@@ -6,12 +6,12 @@ import respx
 from hypothesis import given
 from hypothesis import strategies as st
 
+import enlyze.api_clients.timeseries.models as api_models
 import enlyze.models as user_models
-import enlyze.timeseries_api.models as api_models
+from enlyze.api_clients.timeseries.client import _PaginatedResponse
 from enlyze.client import EnlyzeClient
 from enlyze.constants import ENLYZE_BASE_URL, TIMESERIES_API_SUB_PATH
 from enlyze.errors import EnlyzeError
-from enlyze.timeseries_api.client import _PaginatedResponse
 from tests.conftest import (
     datetime_before_today_strategy,
     datetime_today_until_now_strategy,
