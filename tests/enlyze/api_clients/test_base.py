@@ -181,16 +181,9 @@ def test_get_paginated_multi_page(
 
     mock_has_more = base_client._has_more
     mock_has_more.side_effect = [True, False]
-    mock_has_more_expected_calls = [
-        call(paginated_response_with_next_page),
-        call(paginated_response_no_next_page),
-    ]
 
-    next_page_params = {
-        "cursor": paginated_response_with_next_page.metadata.next_cursor
-    }
     mock_next_page_call_args = base_client._next_page_call_args
-    mock_next_page_call_args.return_value = (endpoint, next_page_params, {})
+    mock_next_page_call_args.return_value = (endpoint, {}, {})
 
     route = respx.get(endpoint)
     route.side_effect = [
@@ -205,7 +198,12 @@ def test_get_paginated_multi_page(
     assert route.called
     assert route.call_count == 2
     assert data == expected_data
-    mock_has_more.assert_has_calls(mock_has_more_expected_calls)
+    mock_has_more.assert_has_calls(
+        [
+            call(paginated_response_with_next_page),
+            call(paginated_response_no_next_page),
+        ]
+    )
     mock_next_page_call_args.assert_called_once_with(
         url=endpoint,
         params=initial_params,
