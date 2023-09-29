@@ -7,7 +7,6 @@ TIMESERIES_API_SUB_PATH = "timeseries-service/v1/"
 #: URL sub-path where the Production Runs API is deployed on the ENLYZE platform.
 PRODUCTION_RUNS_API_SUB_PATH = "production-runs/v1/"
 
-
 #: HTTP timeout for requests to the Timeseries API.
 #:
 #: Reference: https://www.python-httpx.org/advanced/#timeout-configuration
