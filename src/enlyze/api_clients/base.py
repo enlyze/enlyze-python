@@ -155,7 +155,6 @@ class ApiBaseClient(ABC, Generic[R]):
             arguments to fetch the next page
 
         """
-        pass
 
     def get_paginated(
         self, api_path: str, model: type[M], **kwargs: Any
