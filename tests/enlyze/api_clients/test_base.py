@@ -234,6 +234,19 @@ def test_get_paginated_raises_invalid_pagination_schema(
 
 
 @respx.mock
+def test_get_paginated_raises_enlyze_error(
+    base_client, string_model, paginated_response_no_next_page
+):
+    # most straightforward way to raise a pydantic.ValidationError
+    # https://github.com/pydantic/pydantic/discussions/6459
+    string_model.parse_obj.side_effect = lambda _: Metadata()
+    respx.get("").respond(200, json=paginated_response_no_next_page.dict())
+
+    with pytest.raises(EnlyzeError, match="ENLYZE platform API returned an unparsable"):
+        next(base_client.get_paginated("", string_model))
+
+
+@respx.mock
 def test_get_paginated_transform_paginated_data(
     base_client, paginated_response_no_next_page, string_model
 ):
