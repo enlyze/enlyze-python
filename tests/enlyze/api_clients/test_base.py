@@ -163,34 +163,6 @@ def test_get_paginated_single_page(
 
 
 @respx.mock
-def test_get_paginated_transform_paginated_data(
-    base_client, paginated_response_no_next_page, string_model
-):
-    base_client._has_more.return_value = False
-    base_client._transform_paginated_response_data.side_effect = (
-        _transform_paginated_data_integers
-    )
-    expected_data = [
-        string_model.parse_obj(e)
-        for e in _transform_paginated_data_integers(
-            paginated_response_no_next_page.data
-        )
-    ]
-
-    route = respx.get("").respond(200, json=paginated_response_no_next_page.dict())
-
-    data = list(base_client.get_paginated("", ApiBaseModel))
-
-    base_client._transform_paginated_response_data.assert_called_once_with(
-        paginated_response_no_next_page.data
-    )
-
-    assert route.called
-    assert route.call_count == 1
-    assert data == expected_data
-
-
-@respx.mock
 def test_get_paginated_multi_page(
     base_client,
     paginated_response_with_next_page,
@@ -261,3 +233,39 @@ def test_get_paginated_raises_invalid_pagination_schema(
                 ApiBaseModel,
             )
         )
+
+
+@respx.mock
+def test_get_paginated_transform_paginated_data(
+    base_client, paginated_response_no_next_page, string_model
+):
+    base_client._has_more.return_value = False
+    base_client._transform_paginated_response_data.side_effect = (
+        _transform_paginated_data_integers
+    )
+    expected_data = [
+        string_model.parse_obj(e)
+        for e in _transform_paginated_data_integers(
+            paginated_response_no_next_page.data
+        )
+    ]
+
+    route = respx.get("").respond(200, json=paginated_response_no_next_page.dict())
+
+    data = list(base_client.get_paginated("", ApiBaseModel))
+
+    base_client._transform_paginated_response_data.assert_called_once_with(
+        paginated_response_no_next_page.data
+    )
+
+    assert route.called
+    assert route.call_count == 1
+    assert data == expected_data
+
+
+def test_transform_paginated_data_returns_unmutated_element_by_default(auth_token):
+    with patch.multiple(ApiBaseClient, __abstractmethods__=set()):
+        client = ApiBaseClient(auth_token)
+        data = [1, 2, 3]
+        value = client._transform_paginated_response_data(data)
+        assert data == value
