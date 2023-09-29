@@ -21,8 +21,6 @@ class ApiBaseModel(BaseModel):
 
     """
 
-    pass
-
 
 class PaginatedResponseBaseModel(BaseModel):
     """Base class for paginated ENLYZE platform API responses using pydantic."""
