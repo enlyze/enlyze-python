@@ -2,12 +2,11 @@ from datetime import date, datetime
 from typing import Any, Optional, Sequence
 from uuid import UUID
 
-from pydantic import BaseModel
-
 import enlyze.models as user_models
+from enlyze.api_clients.base import ApiBaseModel
 
 
-class TimeseriesApiModel(BaseModel):
+class TimeseriesApiModel(ApiBaseModel):
     """Base class for Timeseries API object models using pydantic
 
     All objects received from the Timeseries API are passed into models that derive from
