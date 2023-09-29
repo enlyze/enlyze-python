@@ -7,11 +7,6 @@ from enlyze.constants import TIMESERIES_API_SUB_PATH
 
 
 @pytest.fixture
-def endpoint():
-    return "https://my-endpoint.com"
-
-
-@pytest.fixture
 def response_data_list() -> list:
     return [1, 2, 3]
 
