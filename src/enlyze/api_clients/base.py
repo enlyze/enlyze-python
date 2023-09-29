@@ -132,7 +132,6 @@ class ApiBaseClient(ABC, Generic[R]):
             :class:`PaginatedResponseBaseModel`.
 
         """
-        pass
 
     @abstractmethod
     def _next_page_call_args(
