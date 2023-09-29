@@ -3,11 +3,11 @@ from functools import cache
 from typing import Iterator, Mapping, Optional, Sequence
 from uuid import UUID
 
+import enlyze.api_clients.timeseries.models as api_models
 import enlyze.models as user_models
-import enlyze.timeseries_api.models as api_models
+from enlyze.api_clients.timeseries.client import TimeseriesApiClient
 from enlyze.constants import VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR
 from enlyze.errors import EnlyzeError
-from enlyze.timeseries_api.client import TimeseriesApiClient
 from enlyze.validators import (
     validate_resampling_interval,
     validate_resampling_method_for_data_type,
