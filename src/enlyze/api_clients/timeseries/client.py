@@ -37,6 +37,9 @@ class TimeseriesApiClient(ApiBaseClient[_PaginatedResponse]):
     def _transform_paginated_response_data(
         self, paginated_response_data: list[Any] | dict[str, Any]
     ) -> list[dict[str, Any]]:
+        # The timeseries endpoint's response data field is a mapping.
+        # Because get_paginated assumes the ``data`` field to be a list,
+        # we wrap it into a list.
         return (
             paginated_response_data
             if isinstance(paginated_response_data, list)
