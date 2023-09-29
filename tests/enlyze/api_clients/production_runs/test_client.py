@@ -11,11 +11,6 @@ from enlyze.constants import ENLYZE_BASE_URL, PRODUCTION_RUNS_API_SUB_PATH
 
 
 @pytest.fixture
-def endpoint():
-    return "https://my-endpoint.com"
-
-
-@pytest.fixture
 def metadata_last_page():
     return _Metadata(has_more=False, next_cursor=None)
 

@@ -12,3 +12,8 @@ def string_model():
         side_effect=lambda o: str(o),
     ):
         yield ApiBaseModel
+
+
+@pytest.fixture
+def endpoint():
+    return "https://my-endpoint.com"
