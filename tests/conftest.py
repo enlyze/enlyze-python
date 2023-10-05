@@ -16,6 +16,7 @@ datetime_today_until_now_strategy = st.datetimes(
 
 datetime_before_today_strategy = st.datetimes(
     max_value=datetime.utcnow().replace(hour=0),
+    min_value=datetime(1970, 1, 1, 12, 0, 0),
     timezones=st.just(timezone.utc),
 )
 
