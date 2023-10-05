@@ -4,6 +4,7 @@ ResamplingMethod
 Timeseries
 UUID
 VariableDataType
+downtimes
 enlyze
 entrypoint
 iterable
