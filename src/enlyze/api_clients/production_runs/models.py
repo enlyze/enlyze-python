@@ -17,7 +17,7 @@ class ProductionRunsApiModel(ApiBaseModel):
 
     @abstractmethod
     def to_user_model(self, *args: Any, **kwargs: Any) -> user_models.Model:
-        """Transform an ProductionRunsApiModel object to a user model."""
+        """Transform a ProductionRunsApiModel to a :ref:`user model <user_models>`."""
 
 
 class OEEComponent(ProductionRunsApiModel):
