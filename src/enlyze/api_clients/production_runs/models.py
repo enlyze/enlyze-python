@@ -1,6 +1,5 @@
-from abc import abstractmethod
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Optional
 from uuid import UUID
 
 import enlyze.models as user_models
@@ -14,10 +13,6 @@ class ProductionRunsApiModel(ApiBaseModel):
     from this class and thus use pydantic for schema definition and validation.
 
     """
-
-    @abstractmethod
-    def to_user_model(self, *args: Any, **kwargs: Any) -> user_models.Model:
-        """Transform a ProductionRunsApiModel to a :ref:`user model <user_models>`."""
 
 
 class OEEComponent(ProductionRunsApiModel):

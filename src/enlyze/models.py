@@ -8,12 +8,8 @@ from uuid import UUID
 import pandas
 
 
-class Model:
-    """Base Class for all models exposed via the :class:`~enlyze.client.EnlyzeClient`"""
-
-
 @dataclass(frozen=True)
-class Site(Model):
+class Site:
     """Representation of a :ref:`site <site>` in the ENLYZE platform.
 
     Contains details about the site.
@@ -30,7 +26,7 @@ class Site(Model):
 
 
 @dataclass(frozen=True)
-class Appliance(Model):
+class Appliance:
     """Representation of an :ref:`appliance <appliance>` in the ENLYZE platform.
 
     Contains details about the appliance.
@@ -84,7 +80,7 @@ class ResamplingMethod(str, Enum):
 
 
 @dataclass(frozen=True)
-class Variable(Model):
+class Variable:
     """Representation of a :ref:`variable <variable>` in the ENLYZE platform.
 
     Contains details about the variable, but no timeseries data.
@@ -108,7 +104,7 @@ class Variable(Model):
 
 
 @dataclass(frozen=True)
-class TimeseriesData(Model):
+class TimeseriesData:
     """Result of a request for timeseries data."""
 
     #: Start of the requested time frame.
@@ -204,7 +200,7 @@ class TimeseriesData(Model):
 
 
 @dataclass(frozen=True)
-class OEEComponent(Model):
+class OEEComponent:
     """Individual Overall Equipment Effectiveness (OEE) score
 
     This is calculated by the ENLYZE Platform based on a combination of real machine
@@ -222,7 +218,7 @@ class OEEComponent(Model):
 
 
 @dataclass(frozen=True)
-class Quantity(Model):
+class Quantity:
     """Representation of a physical quantity"""
 
     #: Physical unit of quantity
@@ -233,7 +229,7 @@ class Quantity(Model):
 
 
 @dataclass(frozen=True)
-class Product(Model):
+class Product:
     """Representation of a product that is produced on an appliance"""
 
     #: The identifier of the product
@@ -244,7 +240,7 @@ class Product(Model):
 
 
 @dataclass(frozen=True)
-class ProductionRun(Model):
+class ProductionRun:
     """Representation of a production run in the ENLYZE platform.
 
     Contains details about the production run.
