@@ -41,7 +41,7 @@ def validate_start_and_end(start: datetime, end: datetime) -> tuple[datetime, da
 
     start = _ensure_datetime_aware(start)
     end = _ensure_datetime_aware(end)
-    if start > end:
+    if start >= end:
         raise EnlyzeError("Start must be earlier than end.")
     return start, end
 
