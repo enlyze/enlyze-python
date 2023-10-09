@@ -297,7 +297,7 @@ class ProductionRuns(list[ProductionRun]):
     def to_dataframe(self) -> pandas.DataFrame:
         """Convert production runs into :py:class:`pandas.DataFrame`
 
-        Each row in the data frame represents one production run. The ``start`` and
+        Each row in the dataframe represents one production run. The ``start`` and
         ``end`` of every production run will be represented as :ref:`timezone-aware
         <python:datetime-naive-aware>` :py:class:`datetime.datetime` localized in UTC.
 
