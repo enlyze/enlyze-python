@@ -5,7 +5,7 @@ from http import HTTPStatus
 import httpx
 import pytest
 import respx
-from hypothesis import given
+from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
 import enlyze.api_clients.production_runs.models as production_runs_api_models
@@ -79,6 +79,16 @@ production_runs_strategy = st.lists(
     ),
     max_size=2,
 )
+
+
+@pytest.fixture
+def start_datetime():
+    return datetime.now() - timedelta(seconds=30)
+
+
+@pytest.fixture
+def end_datetime():
+    return datetime.now()
 
 
 class PaginatedTimeseriesApiResponse(httpx.Response):
@@ -295,8 +305,15 @@ def test_get_timeseries(
 @given(
     data_strategy=st.data(),
 )
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
 def test_get_timeseries_returns_none_on_empty_response(
-    data_strategy, variable_strategy, timeseries_call, resampling_method_strategy, data
+    data_strategy,
+    variable_strategy,
+    timeseries_call,
+    resampling_method_strategy,
+    data,
+    start_datetime,
+    end_datetime,
 ):
     variable = data_strategy.draw(variable_strategy)
     client = make_client()
@@ -305,24 +322,22 @@ def test_get_timeseries_returns_none_on_empty_response(
         mock.get("timeseries").mock(PaginatedTimeseriesApiResponse(data=data))
         if timeseries_call == "without_resampling":
             assert (
-                client.get_timeseries(datetime.now(), datetime.now(), [variable])
-                is None
+                client.get_timeseries(start_datetime, end_datetime, [variable]) is None
             )
         else:
             resampling_method = data_strategy.draw(resampling_method_strategy)
             assert (
                 client.get_timeseries_with_resampling(
-                    datetime.now(), datetime.now(), {variable: resampling_method}, 10
+                    start_datetime, end_datetime, {variable: resampling_method}, 10
                 )
                 is None
             )
 
 
-def test_get_timeseries_raises_no_variables():
+def test_get_timeseries_raises_no_variables(start_datetime, end_datetime):
     client = make_client()
-
     with pytest.raises(EnlyzeError, match="at least one variable"):
-        client.get_timeseries(datetime.now(), datetime.now(), [])
+        client.get_timeseries(start_datetime, end_datetime, [])
 
 
 @given(
@@ -342,17 +357,23 @@ def test_get_timeseries_raises_invalid_time_bounds(variable):
     variable1=st.builds(user_models.Variable),
     variable2=st.builds(user_models.Variable),
 )
-def test_get_timeseries_raises_variables_of_different_appliances(variable1, variable2):
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test_get_timeseries_raises_variables_of_different_appliances(
+    variable1, variable2, start_datetime, end_datetime
+):
     client = make_client()
 
     with pytest.raises(EnlyzeError, match="for more than one appliance"):
-        client.get_timeseries(datetime.now(), datetime.now(), [variable1, variable2])
+        client.get_timeseries(start_datetime, end_datetime, [variable1, variable2])
 
 
 @given(
     variable=st.builds(user_models.Variable),
 )
-def test_get_timeseries_raises_api_returned_no_timestamps(variable):
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test_get_timeseries_raises_api_returned_no_timestamps(
+    variable, start_datetime, end_datetime
+):
     client = make_client()
 
     with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
@@ -364,9 +385,8 @@ def test_get_timeseries_raises_api_returned_no_timestamps(variable):
                 ).dict()
             )
         )
-
         with pytest.raises(EnlyzeError, match="didn't return timestamps"):
-            client.get_timeseries(datetime.now(), datetime.now(), [variable])
+            client.get_timeseries(start_datetime, end_datetime, [variable])
 
 
 @given(
