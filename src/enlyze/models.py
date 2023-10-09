@@ -239,7 +239,7 @@ class Product(Model):
     #: The identifier of the product
     code: str
 
-    #: An optional human friendly name of the product
+    #: An optional human-friendly name of the product
     name: Optional[str] = None
 
 
