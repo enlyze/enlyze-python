@@ -24,15 +24,3 @@ Data models
 .. autoclass:: ResamplingMethod()
     :members:
     :undoc-members:
-
-.. autoclass:: ProductionRun()
-    :members:
-    :undoc-members:
-
-.. autoclass:: OEEScore()
-    :members:
-    :undoc-members:
-
-.. autoclass:: Quantity()
-    :members:
-    :undoc-members:
