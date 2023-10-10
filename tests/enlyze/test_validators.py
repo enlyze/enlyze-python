@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from uuid import UUID
 
 import pytest
-from hypothesis import given
+from hypothesis import example, given
 from hypothesis import strategies as st
 
 from enlyze.errors import EnlyzeError, ResamplingValidationError
@@ -42,6 +42,7 @@ def test_ensure_datetime_aware(dt):
         timezones=st.timezones(),
     )
 )
+@example(dt=datetime(2021, 1, 1, 0, 0, 0, 0))
 def test_validate_datetime(dt):
     validate_datetime(dt)
 
