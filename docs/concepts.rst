@@ -60,8 +60,11 @@ still running, it also has an end.
 
 Usually, the operator of the appliance uses an interface to log the time when a certain
 production order has been worked on. For instance, this could be the appliance's HMI or
-a tablet computer next to it. In German, this is often referred to as
-*Betriebsdatenerfassung* (BDE). It is common, that a production order is not completed in one go, but is interrupted several times for very different reasons, like a breakdown of the appliance or a public holiday. These interruptions lead to the creation of multiple production runs for a single production order.
+a tablet computer next to it. In German, this is often referred to as *Betriebsdatenerfassung* (BDE).
+It is common, that a production order is not completed in one go, but is interrupted
+several times for very different reasons, like a breakdown of the appliance or a
+public holiday. These interruptions lead to the creation of multiple production runs
+for a single production order.
 
 .. _product:
 
