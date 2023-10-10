@@ -42,8 +42,7 @@ A *production order* represents the goal of producing a certain quantity of a gi
 :ref:`product <product>`. This is how operators know how much of which product to
 produce. Production orders are usually created in an external system such as an ERP or
 MES and then synchronized into the ENLYZE platform. They are referenced by an identifier
-which oftentimes is a short combination of numbers and/or characters, like FA23000123 or
-332554.
+which oftentimes is a short combination of numbers and/or characters, like FA23000123.
 
 In the ENLYZE platform, a production order always encompasses the production of one
 single :ref:`product <product>` on one single :ref:`appliance <appliance>` within one
