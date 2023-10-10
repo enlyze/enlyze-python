@@ -311,7 +311,7 @@ class EnlyzeClient:
         start: Optional[datetime] = None,
         end: Optional[datetime] = None,
     ) -> user_models.ProductionRuns:
-        """Retrieve all production runs.
+        """Retrieve optionally filtered list of production runs
 
         :param appliance: The appliance for which to get all production runs.
         :type appliance: :class:`~enlyze.models.Appliance`
