@@ -314,9 +314,7 @@ class EnlyzeClient:
         """Retrieve optionally filtered list of production runs
 
         :param appliance: The appliance for which to get all production runs.
-        :type appliance: :class:`~enlyze.models.Appliance`
         :param product: Filter production runs by product.
-        :type product: :class:`~enlyze.models.Product`
         :param production_order: Filter production runs by production order.
 
         :raises: |token-error|
