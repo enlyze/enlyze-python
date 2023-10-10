@@ -1,3 +1,4 @@
+Betriebsdatenerfassung
 CNC
 JSON
 ResamplingMethod
