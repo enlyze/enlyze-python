@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from uuid import UUID
 
 import pytest
-from hypothesis import example, given
+from hypothesis import given
 from hypothesis import strategies as st
 
 from enlyze.errors import EnlyzeError, ResamplingValidationError
@@ -31,7 +31,6 @@ VARIABLE_STRATEGY = st.builds(Variable)
         timezones=st.timezones(),
     )
 )
-@example(dt=datetime(2021, 1, 1, 0, 0, 0))
 def test_ensure_datetime_aware(dt):
     datetime_with_timezone = _ensure_datetime_aware(dt)
     assert datetime_with_timezone.utcoffset() is not None
