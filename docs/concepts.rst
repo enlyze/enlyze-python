@@ -57,8 +57,8 @@ Production Run
 
 A *production run* represents the real allocation of a :ref:`production order
 <production_order>` on an :ref:`appliance <appliance>`. Usually, the operator of
-the appliance uses some kind of interface to log the time when a certain
-production order has been worked on. A production order oftentimes is not
+the appliance uses an interface to log the time when a certain
+production order has been worked on. For instance, this could be the appliance's HMI or a tablet computer next to it. In German, this is often referred to as "Betriebsdatenerfassung (BDE)". A production order oftentimes is not
 allocated continously on an appliance due to interruptions like a breakdown or
 weekend. Each of these individual, continous allocations is called a *production
 run* in the ENLYZE platform. It always has a beginning and, if it's not still
