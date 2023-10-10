@@ -317,7 +317,7 @@ class EnlyzeClient:
         :type appliance: :class:`~enlyze.models.Appliance`
         :param product: Filter production runs by product.
         :type product: :class:`~enlyze.models.Product`
-        :param production_order: Filter production runs by product.
+        :param production_order: Filter production runs by production order.
 
         :raises: |token-error|
 
