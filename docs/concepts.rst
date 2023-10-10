@@ -46,8 +46,8 @@ which oftentimes is a short combination of numbers and/or characters, like FA230
 332554.
 
 In the ENLYZE platform, a production order always encompasses the production of one
-single :ref:`product <product>` on one single :ref:`appliance <appliance>` within or
-more :ref:`production runs <production_run>`.
+single :ref:`product <product>` on one single :ref:`appliance <appliance>` within one
+or more :ref:`production runs <production_run>`.
 
 .. _production_run:
 
