@@ -306,7 +306,7 @@ class EnlyzeClient:
         self,
         *,
         production_order: Optional[str] = None,
-        product: Optional[user_models.Product] = None,
+        product: Optional[user_models.Product | str] = None,
         appliance: Optional[user_models.Appliance] = None,
         start: Optional[datetime] = None,
         end: Optional[datetime] = None,
@@ -331,14 +331,16 @@ class EnlyzeClient:
             start = validate_datetime(start)
         elif end:
             end = validate_datetime(end)
+
+        product_filter = str(product) if product else None
         appliances_by_uuid = {a.uuid: a for a in self.get_appliances()}
         return user_models.ProductionRuns(
             [
                 production_run.to_user_model(appliances_by_uuid)
                 for production_run in self._get_production_runs(
-                    production_order=production_order,
-                    product=product.code if product else None,
                     appliance=appliance.uuid if appliance else None,
+                    production_order=production_order,
+                    product=product_filter,
                     start=start,
                     end=end,
                 )

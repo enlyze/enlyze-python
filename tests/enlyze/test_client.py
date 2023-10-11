@@ -391,7 +391,10 @@ def test_get_timeseries_raises_api_returned_no_timestamps(
 
 @given(
     production_order=st.just(PRODUCTION_ORDER),
-    product=st.builds(user_models.Product, code=st.just(PRODUCT_CODE)),
+    product=st.one_of(
+        st.builds(user_models.Product, code=st.just(PRODUCT_CODE)),
+        st.text(),
+    ),
     appliance=st.builds(
         timeseries_api_models.Appliance,
         site=st.just(SITE_ID),
