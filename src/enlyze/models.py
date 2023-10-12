@@ -238,9 +238,6 @@ class Product:
     #: An optional human-friendly name of the product
     name: Optional[str] = None
 
-    def __str__(self):
-        return self.code
-
 
 @dataclass(frozen=True)
 class ProductionRun:

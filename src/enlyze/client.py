@@ -332,7 +332,9 @@ class EnlyzeClient:
         elif end:
             end = validate_datetime(end)
 
-        product_filter = str(product) if product else None
+        product_filter = (
+            product.code if isinstance(product, user_models.Product) else product
+        )
         appliances_by_uuid = {a.uuid: a for a in self.get_appliances()}
         return user_models.ProductionRuns(
             [
