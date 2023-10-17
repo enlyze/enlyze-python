@@ -3,21 +3,25 @@ from functools import cache
 from typing import Iterator, Mapping, Optional, Sequence
 from uuid import UUID
 
-import enlyze.api_clients.timeseries.models as api_models
+import enlyze.api_clients.timeseries.models as timeseries_api_models
 import enlyze.models as user_models
+from enlyze.api_clients.production_runs.client import ProductionRunsApiClient
+from enlyze.api_clients.production_runs.models import ProductionRun
 from enlyze.api_clients.timeseries.client import TimeseriesApiClient
 from enlyze.constants import VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR
 from enlyze.errors import EnlyzeError
 from enlyze.validators import (
+    validate_datetime,
     validate_resampling_interval,
     validate_resampling_method_for_data_type,
+    validate_start_and_end,
     validate_timeseries_arguments,
 )
 
 
 def _get_timeseries_data_from_pages(
-    pages: Iterator[api_models.TimeseriesData],
-) -> Optional[api_models.TimeseriesData]:
+    pages: Iterator[timeseries_api_models.TimeseriesData],
+) -> Optional[timeseries_api_models.TimeseriesData]:
     try:
         timeseries_data = next(pages)
     except StopIteration:
@@ -46,11 +50,14 @@ class EnlyzeClient:
     """
 
     def __init__(self, token: str) -> None:
-        self._client = TimeseriesApiClient(token=token)
+        self._timeseries_api_client = TimeseriesApiClient(token=token)
+        self._production_runs_api_client = ProductionRunsApiClient(token=token)
 
-    def _get_sites(self) -> Iterator[api_models.Site]:
+    def _get_sites(self) -> Iterator[timeseries_api_models.Site]:
         """Get all sites from the API"""
-        return self._client.get_paginated("sites", api_models.Site)
+        return self._timeseries_api_client.get_paginated(
+            "sites", timeseries_api_models.Site
+        )
 
     @cache
     def get_sites(self) -> list[user_models.Site]:
@@ -66,9 +73,11 @@ class EnlyzeClient:
         """
         return [site.to_user_model() for site in self._get_sites()]
 
-    def _get_appliances(self) -> Iterator[api_models.Appliance]:
+    def _get_appliances(self) -> Iterator[timeseries_api_models.Appliance]:
         """Get all appliances from the API"""
-        return self._client.get_paginated("appliances", api_models.Appliance)
+        return self._timeseries_api_client.get_paginated(
+            "appliances", timeseries_api_models.Appliance
+        )
 
     @cache
     def get_appliances(
@@ -104,10 +113,14 @@ class EnlyzeClient:
 
         return appliances
 
-    def _get_variables(self, appliance_uuid: UUID) -> Iterator[api_models.Variable]:
+    def _get_variables(
+        self, appliance_uuid: UUID
+    ) -> Iterator[timeseries_api_models.Variable]:
         """Get variables for an appliance from the API."""
-        return self._client.get_paginated(
-            "variables", api_models.Variable, params={"appliance": str(appliance_uuid)}
+        return self._timeseries_api_client.get_paginated(
+            "variables",
+            timeseries_api_models.Variable,
+            params={"appliance": str(appliance_uuid)},
         )
 
     def get_variables(
@@ -146,8 +159,8 @@ class EnlyzeClient:
         datetime objects will be assumed to be expressed in the local timezone of the
         system where the code is run.
 
-        :param start: Beginning of the time frame for which to fetch timeseries data.
-            Must not be before ``end``.
+        :param start: Start of the time frame for which to fetch timeseries data. Must
+            not be before ``end``.
         :param end: End of the time frame for which to fetch timeseries data.
         :param variables: The variables for which to fetch timeseries data.
 
@@ -164,9 +177,9 @@ class EnlyzeClient:
             start, end, variables
         )
 
-        pages = self._client.get_paginated(
+        pages = self._timeseries_api_client.get_paginated(
             "timeseries",
-            api_models.TimeseriesData,
+            timeseries_api_models.TimeseriesData,
             params={
                 "appliance": appliance_uuid,
                 "start_datetime": start.isoformat(),
@@ -202,8 +215,8 @@ class EnlyzeClient:
         datetime objects will be assumed to be expressed in the local timezone of the
         system where the code is run.
 
-        :param start: Beginning of the time frame for which to fetch timeseries data.
-            Must not be before ``end``.
+        :param start: Start of the time frame for which to fetch timeseries data. Must
+            not be before ``end``.
         :param end: End of the time frame for which to fetch timeseries data.
         :param variables: The variables for which to fetch timeseries data along with a
             :class:`~enlyze.models.ResamplingMethod` for each variable. Resampling isn't
@@ -244,9 +257,9 @@ class EnlyzeClient:
         )
         validate_resampling_interval(resampling_interval)
 
-        pages = self._client.get_paginated(
+        pages = self._timeseries_api_client.get_paginated(
             "timeseries",
-            api_models.TimeseriesData,
+            timeseries_api_models.TimeseriesData,
             params={
                 "appliance": appliance_uuid,
                 "start_datetime": start.isoformat(),
@@ -264,4 +277,74 @@ class EnlyzeClient:
             start=start,
             end=end,
             variables=variables_sequence,
+        )
+
+    def _get_production_runs(
+        self,
+        *,
+        production_order: Optional[str] = None,
+        product: Optional[str] = None,
+        appliance: Optional[UUID] = None,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
+    ) -> Iterator[ProductionRun]:
+        """Get production runs from the API."""
+
+        filters = {
+            "production_order": production_order,
+            "product": product,
+            "appliance": appliance,
+            "start": start.isoformat() if start else None,
+            "end": end.isoformat() if end else None,
+        }
+        params = {k: v for k, v in filters.items() if v is not None}
+        return self._production_runs_api_client.get_paginated(
+            "production-runs", ProductionRun, params=params
+        )
+
+    def get_production_runs(
+        self,
+        *,
+        production_order: Optional[str] = None,
+        product: Optional[user_models.Product | str] = None,
+        appliance: Optional[user_models.Appliance] = None,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
+    ) -> user_models.ProductionRuns:
+        """Retrieve optionally filtered list of :ref:`production runs <production_run>`.
+
+        :param appliance: The appliance for which to get all production runs.
+        :param product: Filter production runs by product.
+        :param production_order: Filter production runs by production order.
+
+        :raises: |token-error|
+
+        :raises: |generic-error|
+
+        :returns: Production runs
+        :rtype: :class:`~enlyze.models.ProductionRuns`
+
+        """
+        if start and end:
+            start, end = validate_start_and_end(start, end)
+        elif start:
+            start = validate_datetime(start)
+        elif end:
+            end = validate_datetime(end)
+
+        product_filter = (
+            product.code if isinstance(product, user_models.Product) else product
+        )
+        appliances_by_uuid = {a.uuid: a for a in self.get_appliances()}
+        return user_models.ProductionRuns(
+            [
+                production_run.to_user_model(appliances_by_uuid)
+                for production_run in self._get_production_runs(
+                    appliance=appliance.uuid if appliance else None,
+                    production_order=production_order,
+                    product=product_filter,
+                    start=start,
+                    end=end,
+                )
+            ]
         )

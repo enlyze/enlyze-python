@@ -3,15 +3,18 @@ from datetime import datetime, timedelta
 from uuid import UUID
 
 import pytest
-from hypothesis import given
+from hypothesis import example, given
 from hypothesis import strategies as st
 
 from enlyze.errors import EnlyzeError, ResamplingValidationError
 from enlyze.models import ResamplingMethod, Variable, VariableDataType
 from enlyze.validators import (
     VARIABLE_ARRAY_DATA_TYPES,
+    _ensure_datetime_aware,
+    validate_datetime,
     validate_resampling_interval,
     validate_resampling_method_for_data_type,
+    validate_start_and_end,
     validate_timeseries_arguments,
 )
 from tests.conftest import (
@@ -20,6 +23,43 @@ from tests.conftest import (
 )
 
 VARIABLE_STRATEGY = st.builds(Variable)
+
+
+@given(
+    dt=st.datetimes(
+        max_value=datetime.utcnow(),
+        timezones=st.timezones(),
+    )
+)
+def test_ensure_datetime_aware(dt):
+    datetime_with_timezone = _ensure_datetime_aware(dt)
+    assert datetime_with_timezone.utcoffset() is not None
+
+
+@given(
+    dt=st.datetimes(
+        max_value=datetime.utcnow(),
+        timezones=st.timezones(),
+    )
+)
+@example(dt=datetime(2021, 1, 1, 0, 0, 0, 0))
+def test_validate_datetime(dt):
+    validate_datetime(dt)
+
+
+class TestValidateStartAndEnd:
+    @given(
+        start=datetime_before_today_strategy,
+        end=datetime_today_until_now_strategy,
+    )
+    def test_validate_timeseries_arguments(self, start, end):
+        start, end = validate_start_and_end(start, end)
+
+    def test_validate_start_must_be_earlier_than_end(self):
+        end = datetime.now()
+        start = end + timedelta(days=1)
+        with pytest.raises(EnlyzeError):
+            validate_start_and_end(start, end)
 
 
 class TestValidateTimeseriesArguments:

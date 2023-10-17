@@ -5,6 +5,8 @@ ResamplingMethod
 Timeseries
 UUID
 VariableDataType
+dataframe
+downtimes
 enlyze
 entrypoint
 iterable
