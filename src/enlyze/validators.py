@@ -13,6 +13,10 @@ VARIABLE_ARRAY_DATA_TYPES = (
     user_models.VariableDataType.ARRAY_FLOAT,
 )
 
+_NAIVE_DATETIME_DISCOURAGED_LOG_MESSAGE = (
+    "Passing naive datetime is discouraged, assuming local timezone."
+)
+
 
 def _ensure_datetime_aware(dt: datetime) -> datetime:
     """Make the returned datetime timezone aware.
@@ -24,6 +28,24 @@ def _ensure_datetime_aware(dt: datetime) -> datetime:
     return dt.astimezone(timezone.utc)
 
 
+def validate_datetime(dt: datetime) -> datetime:
+    if dt.utcoffset() is None:
+        logging.warning(_NAIVE_DATETIME_DISCOURAGED_LOG_MESSAGE)
+
+    return _ensure_datetime_aware(dt)
+
+
+def validate_start_and_end(start: datetime, end: datetime) -> tuple[datetime, datetime]:
+    if start.utcoffset() is None or end.utcoffset() is None:
+        logging.warning(_NAIVE_DATETIME_DISCOURAGED_LOG_MESSAGE)
+
+    start = _ensure_datetime_aware(start)
+    end = _ensure_datetime_aware(end)
+    if start >= end:
+        raise EnlyzeError("Start must be earlier than end.")
+    return start, end
+
+
 def validate_timeseries_arguments(
     start: datetime,
     end: datetime,
@@ -32,15 +54,7 @@ def validate_timeseries_arguments(
     if not variables:
         raise EnlyzeError("Need to request at least one variable")
 
-    if start.utcoffset() is None or end.utcoffset() is None:
-        logging.warning(
-            "Passing naive datetime is discouraged, assuming local timezone."
-        )
-
-    start = _ensure_datetime_aware(start)
-    end = _ensure_datetime_aware(end)
-    if start > end:
-        raise EnlyzeError("Start must be earlier than end.")
+    start, end = validate_start_and_end(start, end)
 
     appliance_uuids = frozenset(v.appliance.uuid for v in variables)
 

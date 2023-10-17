@@ -1,7 +1,7 @@
 Models
 ======
 
-.. currentmodule:: enlyze.timeseries_api.models
+.. currentmodule:: enlyze.api_clients.timeseries.models
 
 .. autoclass:: TimeseriesApiModel()
 

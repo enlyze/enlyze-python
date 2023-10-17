@@ -1,11 +1,15 @@
+Betriebsdatenerfassung
 CNC
 JSON
 ResamplingMethod
 Timeseries
 UUID
 VariableDataType
+dataframe
+downtimes
 enlyze
 entrypoint
+iterable
 noqa
 quickstart
 resample
@@ -13,6 +17,7 @@ resampled
 resampling
 str
 timeseries
+url
 uuid
 virtualenv
 whitespace

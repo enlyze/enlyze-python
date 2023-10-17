@@ -19,4 +19,4 @@ User's Guide
     models
     errors
     constants
-    timeseries_api/index
+    api_clients/index

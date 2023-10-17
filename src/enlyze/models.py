@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from dataclasses import asdict, dataclass
+from datetime import date, datetime, timedelta, timezone
 from enum import Enum
 from itertools import chain
 from typing import Any, Iterator, Optional, Sequence
@@ -107,7 +107,7 @@ class Variable:
 class TimeseriesData:
     """Result of a request for timeseries data."""
 
-    #: Beginning of the requested time frame.
+    #: Start of the requested time frame.
     start: datetime
 
     #: End of the requested time frame.
@@ -196,4 +196,114 @@ class TimeseriesData:
             index="time",
         )
         df.index = pandas.to_datetime(df.index, utc=True, format="ISO8601")
+        return df
+
+
+@dataclass(frozen=True)
+class OEEComponent:
+    """Individual Overall Equipment Effectiveness (OEE) score
+
+    This is calculated by the ENLYZE Platform based on a combination of real machine
+    data and production order booking information provided by the customer.
+
+    For more information, please check out https://www.oee.com
+
+    """
+
+    #: The score is expressed as a ratio between 0 and 1.0, with 1.0 meaning 100 %.
+    score: float
+
+    #: Unproductive time due to non-ideal production.
+    time_loss: timedelta
+
+
+@dataclass(frozen=True)
+class Quantity:
+    """Representation of a physical quantity"""
+
+    #: Physical unit of quantity
+    unit: str
+
+    #: The quantity expressed in `unit`
+    value: float
+
+
+@dataclass(frozen=True)
+class Product:
+    """Representation of a product that is produced on an appliance"""
+
+    #: The identifier of the product
+    code: str
+
+    #: An optional human-friendly name of the product
+    name: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class ProductionRun:
+    """Representation of a production run in the ENLYZE platform.
+
+    Contains details about the production run.
+
+    """
+
+    #: The UUID of the appliance the production run was executed on.
+    appliance: Appliance
+
+    #: The average throughput of the production run excluding downtimes.
+    average_throughput: Optional[float]
+
+    #: The identifier of the production order.
+    production_order: str
+
+    #: The identifier of the product that was produced.
+    product: Product
+
+    #: The begin of the production run.
+    start: datetime
+
+    #: The end of the production run.
+    end: Optional[datetime]
+
+    #: This is the sum of scrap and yield.
+    quantity_total: Optional[Quantity]
+
+    #: The amount of product produced that doesn't meet quality criteria.
+    quantity_scrap: Optional[Quantity]
+
+    #: The amount of product produced that can be sold.
+    quantity_yield: Optional[Quantity]
+
+    #: OEE component that reflects when the appliance did not produce.
+    availability: Optional[OEEComponent]
+
+    #: OEE component that reflects how fast the appliance has run.
+    performance: Optional[OEEComponent]
+
+    #: OEE component that reflects how much defects have been produced.
+    quality: Optional[OEEComponent]
+
+    #: Aggregate OEE score that comprises availability, performance and quality.
+    productivity: Optional[OEEComponent]
+
+
+class ProductionRuns(list[ProductionRun]):
+    """Representation of multiple production runs."""
+
+    def to_dataframe(self) -> pandas.DataFrame:
+        """Convert production runs into :py:class:`pandas.DataFrame`
+
+        Each row in the dataframe represents one production run. The ``start`` and
+        ``end`` of every production run will be represented as :ref:`timezone-aware
+        <python:datetime-naive-aware>` :py:class:`datetime.datetime` localized in UTC.
+
+        :returns: DataFrame with production runs
+
+        """
+        if not self:
+            return pandas.DataFrame()
+
+        df = pandas.json_normalize([asdict(run) for run in self])
+        df.start = pandas.to_datetime(df.start, utc=True, format="ISO8601")
+        df.end = pandas.to_datetime(df.end, utc=True, format="ISO8601")
         return df
