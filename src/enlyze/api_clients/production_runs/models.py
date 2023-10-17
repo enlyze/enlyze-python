@@ -17,7 +17,7 @@ class ProductionRunsApiModel(ApiBaseModel):
 
     @abstractmethod
     def to_user_model(self, *args: Any, **kwargs: Any) -> Any:
-        pass
+        """Convert to a model that will be returned to the user."""
 
 
 class OEEComponent(ProductionRunsApiModel):
