@@ -33,16 +33,16 @@ class Appliance:
 
     """
 
-    #: Stable identifier of the appliance."""
+    #: Stable identifier of the appliance.
     uuid: UUID
 
-    #: Display name of the appliance."""
+    #: Display name of the appliance.
     display_name: str
 
-    #: The date when the appliance has been connected to the ENLYZE platform."""
+    #: The date when the appliance has been connected to the ENLYZE platform.
     genesis_date: date
 
-    #: The site where the appliance is located."""
+    #: The site where the appliance is located.
     site: Site
 
 
