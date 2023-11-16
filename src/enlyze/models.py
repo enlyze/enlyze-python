@@ -247,6 +247,9 @@ class ProductionRun:
 
     """
 
+    #: The UUID of the production run
+    uuid: UUID
+
     #: The UUID of the appliance the production run was executed on.
     appliance: Appliance
 
