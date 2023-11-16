@@ -250,7 +250,7 @@ class ProductionRun:
     #: The UUID of the production run
     uuid: UUID
 
-    #: The UUID of the appliance the production run was executed on.
+    #: The appliance the production run was executed on.
     appliance: Appliance
 
     #: The average throughput of the production run excluding downtimes.
