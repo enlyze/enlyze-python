@@ -58,6 +58,7 @@ quantity_strategy = st.builds(
 production_runs_strategy = st.lists(
     st.builds(
         production_runs_api_models.ProductionRun,
+        uuid=st.uuids(),
         start=datetime_before_today_strategy,
         end=datetime_today_until_now_strategy,
         appliance=st.builds(

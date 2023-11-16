@@ -65,6 +65,7 @@ class Appliance(ApiBaseModel):
 
 
 class ProductionRun(ProductionRunsApiModel):
+    uuid: UUID
     appliance: Appliance
     average_throughput: Optional[float]
     production_order: str
@@ -99,6 +100,7 @@ class ProductionRun(ProductionRunsApiModel):
         productivity = self.productivity.to_user_model() if self.productivity else None
 
         return user_models.ProductionRun(
+            uuid=self.uuid,
             appliance=appliances_by_uuid[self.appliance.uuid],
             average_throughput=self.average_throughput,
             production_order=self.production_order,
