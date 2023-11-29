@@ -222,7 +222,7 @@ class Quantity:
     """Representation of a physical quantity"""
 
     #: Physical unit of quantity
-    unit: str
+    unit: str | None
 
     #: The quantity expressed in `unit`
     value: float
