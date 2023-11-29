@@ -27,7 +27,7 @@ VARIABLE_STRATEGY = st.builds(Variable)
 
 @given(
     dt=st.datetimes(
-        max_value=datetime.utcnow(),
+        max_value=datetime.now(),
         timezones=st.timezones(),
     )
 )
@@ -38,7 +38,7 @@ def test_ensure_datetime_aware(dt):
 
 @given(
     dt=st.datetimes(
-        max_value=datetime.utcnow(),
+        max_value=datetime.now(),
         timezones=st.timezones(),
     )
 )

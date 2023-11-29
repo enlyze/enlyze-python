@@ -8,7 +8,7 @@ from enlyze.api_clients.base import ApiBaseModel
 @pytest.fixture
 def string_model():
     with patch(
-        "enlyze.api_clients.base.ApiBaseModel.parse_obj",
+        "enlyze.api_clients.base.ApiBaseModel.model_validate",
         side_effect=lambda o: str(o),
     ):
         yield ApiBaseModel

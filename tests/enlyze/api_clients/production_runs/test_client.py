@@ -84,9 +84,9 @@ def test_timeseries_api_get_paginated_single_page(
     production_runs_client, string_model, paginated_response_no_next_page
 ):
     expected_data = [
-        string_model.parse_obj(e) for e in paginated_response_no_next_page.data
+        string_model.model_validate(e) for e in paginated_response_no_next_page.data
     ]
-    respx.get("").respond(json=paginated_response_no_next_page.dict())
+    respx.get("").respond(json=paginated_response_no_next_page.model_dump())
     assert list(production_runs_client.get_paginated("", string_model)) == expected_data
 
 
@@ -98,7 +98,7 @@ def test_timeseries_api_get_paginated_multi_page(
     paginated_response_no_next_page,
 ):
     expected_data = [
-        string_model.parse_obj(e)
+        string_model.model_validate(e)
         for e in [
             *paginated_response_no_next_page.data,
             *paginated_response_with_next_page.data,
@@ -106,12 +106,12 @@ def test_timeseries_api_get_paginated_multi_page(
     ]
     next_cursor = paginated_response_with_next_page.metadata.next_cursor
     respx.get("", params=f"cursor={next_cursor}").respond(
-        200, json=paginated_response_no_next_page.dict()
+        200, json=paginated_response_no_next_page.model_dump()
     )
     respx.get("").mock(
         side_effect=lambda request: httpx.Response(
             200,
-            json=paginated_response_with_next_page.dict(),
+            json=paginated_response_with_next_page.model_dump(),
         )
     )
 
