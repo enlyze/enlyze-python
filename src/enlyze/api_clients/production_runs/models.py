@@ -47,7 +47,7 @@ class Product(ProductionRunsApiModel):
 
 
 class Quantity(ProductionRunsApiModel):
-    unit: str
+    unit: str | None
     value: float
 
     def to_user_model(self) -> user_models.Quantity:
