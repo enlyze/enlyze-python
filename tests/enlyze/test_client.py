@@ -433,7 +433,9 @@ def test_get_production_runs(
             PaginatedTimeseriesApiResponse(data=[site])
         )
         production_runs_api_mock.get("production-runs").mock(
-            PaginatedProductionRunsApiResponse(data=[p.model_dump() for p in production_runs])
+            PaginatedProductionRunsApiResponse(
+                data=[p.model_dump() for p in production_runs]
+            )
         )
 
         result = client.get_production_runs(

@@ -261,7 +261,9 @@ def test_get_paginated_transform_paginated_data(
         )
     ]
 
-    route = respx.get("").respond(200, json=paginated_response_no_next_page.model_dump())
+    route = respx.get("").respond(
+        200, json=paginated_response_no_next_page.model_dump()
+    )
 
     data = list(base_client.get_paginated("", ApiBaseModel))
 
