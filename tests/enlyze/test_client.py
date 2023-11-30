@@ -96,7 +96,7 @@ class PaginatedTimeseriesApiResponse(httpx.Response):
     def __init__(self, data, next=None) -> None:
         super().__init__(
             status_code=HTTPStatus.OK,
-            text=_PaginatedTimeseriesResponse(data=data, next=next).json(),
+            text=_PaginatedTimeseriesResponse(data=data, next=next).model_dump_json(),
             headers=MOCK_RESPONSE_HEADERS,
         )
 
@@ -111,7 +111,7 @@ class PaginatedProductionRunsApiResponse(httpx.Response):
                     has_more=has_more,
                     next_cursor=next_cursor,
                 ),
-            ).json(),
+            ).model_dump_json(),
             headers=MOCK_RESPONSE_HEADERS,
         )
 
@@ -242,7 +242,7 @@ def test_get_timeseries(
                 data=timeseries_api_models.TimeseriesData(
                     columns=["time", str(variable.uuid)],
                     records=records[1:],
-                ).dict()
+                ).model_dump()
             )
         )
 
@@ -251,7 +251,7 @@ def test_get_timeseries(
                 data=timeseries_api_models.TimeseriesData(
                     columns=["time", str(variable.uuid)],
                     records=records[:1],
-                ).dict(),
+                ).model_dump(),
                 next=str(request.url.join("?offset=1")),
             )
         )
@@ -285,7 +285,7 @@ def test_get_timeseries(
     "data",
     [
         {},
-        timeseries_api_models.TimeseriesData(columns=[], records=[]).dict(),
+        timeseries_api_models.TimeseriesData(columns=[], records=[]).model_dump(),
     ],
 )
 @pytest.mark.parametrize(
@@ -383,7 +383,7 @@ def test_get_timeseries_raises_api_returned_no_timestamps(
                 data=timeseries_api_models.TimeseriesData(
                     columns=["something but not time"],
                     records=[],
-                ).dict()
+                ).model_dump()
             )
         )
         with pytest.raises(EnlyzeError, match="didn't return timestamps"):
@@ -433,7 +433,9 @@ def test_get_production_runs(
             PaginatedTimeseriesApiResponse(data=[site])
         )
         production_runs_api_mock.get("production-runs").mock(
-            PaginatedProductionRunsApiResponse(data=[p.dict() for p in production_runs])
+            PaginatedProductionRunsApiResponse(
+                data=[p.model_dump() for p in production_runs]
+            )
         )
 
         result = client.get_production_runs(

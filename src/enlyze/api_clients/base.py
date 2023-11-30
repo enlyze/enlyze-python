@@ -187,7 +187,7 @@ class ApiBaseClient(ABC, Generic[R]):
         while True:
             response_body = self.get(url, params=params, **kwargs)
             try:
-                paginated_response = self.PaginatedResponseModel.parse_obj(
+                paginated_response = self.PaginatedResponseModel.model_validate(
                     response_body
                 )
             except ValidationError as e:
@@ -203,7 +203,7 @@ class ApiBaseClient(ABC, Generic[R]):
 
             for elem in page_data:
                 try:
-                    yield model.parse_obj(elem)
+                    yield model.model_validate(elem)
                 except ValidationError as e:
                     raise EnlyzeError(
                         f"ENLYZE platform API returned an unparsable {model.__name__} "

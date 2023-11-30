@@ -145,13 +145,13 @@ def test_get_paginated_single_page(
     endpoint = "https://irrelevant-url.com"
     params = {"params": {"param1": "value1"}}
     expected_data = [
-        string_model.parse_obj(e) for e in paginated_response_no_next_page.data
+        string_model.model_validate(e) for e in paginated_response_no_next_page.data
     ]
 
     mock_has_more = base_client._has_more
     mock_has_more.return_value = False
     route = respx.get(endpoint, params=params).respond(
-        200, json=paginated_response_no_next_page.dict()
+        200, json=paginated_response_no_next_page.model_dump()
     )
 
     data = list(base_client.get_paginated(endpoint, ApiBaseModel, params=params))
@@ -172,7 +172,7 @@ def test_get_paginated_multi_page(
     endpoint = "https://irrelevant-url.com"
     initial_params = {"irrelevant": "values"}
     expected_data = [
-        string_model.parse_obj(e)
+        string_model.model_validate(e)
         for e in [
             *paginated_response_with_next_page.data,
             *paginated_response_no_next_page.data,
@@ -187,8 +187,8 @@ def test_get_paginated_multi_page(
 
     route = respx.get(endpoint)
     route.side_effect = [
-        httpx.Response(200, json=paginated_response_with_next_page.dict()),
-        httpx.Response(200, json=paginated_response_no_next_page.dict()),
+        httpx.Response(200, json=paginated_response_with_next_page.model_dump()),
+        httpx.Response(200, json=paginated_response_no_next_page.model_dump()),
     ]
 
     data = list(
@@ -239,8 +239,8 @@ def test_get_paginated_raises_enlyze_error(
 ):
     # most straightforward way to raise a pydantic.ValidationError
     # https://github.com/pydantic/pydantic/discussions/6459
-    string_model.parse_obj.side_effect = lambda _: Metadata()
-    respx.get("").respond(200, json=paginated_response_no_next_page.dict())
+    string_model.model_validate.side_effect = lambda _: Metadata()
+    respx.get("").respond(200, json=paginated_response_no_next_page.model_dump())
 
     with pytest.raises(EnlyzeError, match="ENLYZE platform API returned an unparsable"):
         next(base_client.get_paginated("", string_model))
@@ -255,13 +255,15 @@ def test_get_paginated_transform_paginated_data(
         _transform_paginated_data_integers
     )
     expected_data = [
-        string_model.parse_obj(e)
+        string_model.model_validate(e)
         for e in _transform_paginated_data_integers(
             paginated_response_no_next_page.data
         )
     ]
 
-    route = respx.get("").respond(200, json=paginated_response_no_next_page.dict())
+    route = respx.get("").respond(
+        200, json=paginated_response_no_next_page.model_dump()
+    )
 
     data = list(base_client.get_paginated("", ApiBaseModel))
 
