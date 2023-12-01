@@ -12,7 +12,6 @@ from enlyze.api_clients.base import (
     ApiBaseModel,
     PaginatedResponseBaseModel,
 )
-from enlyze.constants import ENLYZE_BASE_URL
 from enlyze.errors import EnlyzeError, InvalidTokenError
 
 

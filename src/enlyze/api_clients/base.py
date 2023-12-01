@@ -9,7 +9,7 @@ import httpx
 from pydantic import BaseModel, ValidationError
 
 from enlyze.auth import TokenAuth
-from enlyze.constants import ENLYZE_BASE_URL, HTTPX_TIMEOUT
+from enlyze.constants import HTTPX_TIMEOUT
 from enlyze.errors import EnlyzeError, InvalidTokenError
 
 

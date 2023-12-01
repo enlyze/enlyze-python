@@ -52,14 +52,14 @@ class EnlyzeClient:
 
     """
 
-    def __init__(self, token: str, base_url: str | None = ENLYZE_BASE_URL) -> None:
+    def __init__(self, token: str, base_url: str | None = None) -> None:
         self._timeseries_api_client = TimeseriesApiClient(
             token=token,
-            base_url=base_url,
+            base_url=base_url or ENLYZE_BASE_URL,
         )
         self._production_runs_api_client = ProductionRunsApiClient(
             token=token,
-            base_url=base_url,
+            base_url=base_url or ENLYZE_BASE_URL,
         )
 
     def _get_sites(self) -> Iterator[timeseries_api_models.Site]:

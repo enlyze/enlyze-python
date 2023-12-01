@@ -7,7 +7,7 @@ from enlyze.api_clients.production_runs.client import (
     _Metadata,
     _PaginatedResponse,
 )
-from enlyze.constants import ENLYZE_BASE_URL, PRODUCTION_RUNS_API_SUB_PATH
+from enlyze.constants import PRODUCTION_RUNS_API_SUB_PATH
 
 
 @pytest.fixture

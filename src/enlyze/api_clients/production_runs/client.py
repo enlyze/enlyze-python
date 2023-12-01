@@ -4,7 +4,7 @@ import httpx
 from pydantic import BaseModel
 
 from enlyze.api_clients.base import ApiBaseClient, PaginatedResponseBaseModel
-from enlyze.constants import ENLYZE_BASE_URL, PRODUCTION_RUNS_API_SUB_PATH
+from enlyze.constants import PRODUCTION_RUNS_API_SUB_PATH
 
 
 class _Metadata(BaseModel):
