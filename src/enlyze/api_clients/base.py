@@ -51,9 +51,9 @@ class ApiBaseClient(ABC, Generic[R]):
 
     def __init__(
         self,
-        token: str,
         *,
-        base_url: str | httpx.URL = ENLYZE_BASE_URL,
+        token: str,
+        base_url: str | httpx.URL,
         timeout: float = HTTPX_TIMEOUT,
     ):
         self._client = httpx.Client(

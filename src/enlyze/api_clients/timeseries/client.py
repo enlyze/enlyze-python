@@ -25,13 +25,15 @@ class TimeseriesApiClient(ApiBaseClient[_PaginatedResponse]):
 
     def __init__(
         self,
-        token: str,
         *,
-        base_url: str | httpx.URL = ENLYZE_BASE_URL,
+        token: str,
+        base_url: str | httpx.URL,
         **kwargs: Any,
     ):
         super().__init__(
-            token, base_url=httpx.URL(base_url).join(TIMESERIES_API_SUB_PATH), **kwargs
+            token=token,
+            base_url=httpx.URL(base_url).join(TIMESERIES_API_SUB_PATH),
+            **kwargs,
         )
 
     def _transform_paginated_response_data(

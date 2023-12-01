@@ -35,12 +35,16 @@ def paginated_response_with_next_page(endpoint):
 
 
 @pytest.fixture
-def timeseries_client(auth_token):
-    return TimeseriesApiClient(token=auth_token)
+def base_url():
+    return "http://x"
 
 
-def test_timeseries_api_appends_sub_path(auth_token):
-    base_url = "https://some-base-url.com"
+@pytest.fixture
+def timeseries_client(auth_token, base_url):
+    return TimeseriesApiClient(token=auth_token, base_url=base_url)
+
+
+def test_timeseries_api_appends_sub_path(auth_token, base_url):
     expected = str(httpx.URL(base_url).join(TIMESERIES_API_SUB_PATH))
     client = TimeseriesApiClient(token=auth_token, base_url=base_url)
     assert client._full_url("") == expected
