@@ -4,7 +4,7 @@ import httpx
 from pydantic import AnyUrl
 
 from enlyze.api_clients.base import ApiBaseClient, PaginatedResponseBaseModel
-from enlyze.constants import ENLYZE_BASE_URL, TIMESERIES_API_SUB_PATH
+from enlyze.constants import TIMESERIES_API_SUB_PATH
 
 
 class _PaginatedResponse(PaginatedResponseBaseModel):
@@ -25,13 +25,15 @@ class TimeseriesApiClient(ApiBaseClient[_PaginatedResponse]):
 
     def __init__(
         self,
-        token: str,
         *,
-        base_url: str | httpx.URL = ENLYZE_BASE_URL,
+        token: str,
+        base_url: str | httpx.URL,
         **kwargs: Any,
     ):
         super().__init__(
-            token, base_url=httpx.URL(base_url).join(TIMESERIES_API_SUB_PATH), **kwargs
+            token=token,
+            base_url=httpx.URL(base_url).join(TIMESERIES_API_SUB_PATH),
+            **kwargs,
         )
 
     def _transform_paginated_response_data(

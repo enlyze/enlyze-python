@@ -4,7 +4,7 @@ import httpx
 from pydantic import BaseModel
 
 from enlyze.api_clients.base import ApiBaseClient, PaginatedResponseBaseModel
-from enlyze.constants import ENLYZE_BASE_URL, PRODUCTION_RUNS_API_SUB_PATH
+from enlyze.constants import PRODUCTION_RUNS_API_SUB_PATH
 
 
 class _Metadata(BaseModel):
@@ -29,10 +29,14 @@ class ProductionRunsApiClient(ApiBaseClient[_PaginatedResponse]):
     PaginatedResponseModel = _PaginatedResponse
 
     def __init__(
-        self, token: str, *, base_url: str | httpx.URL = ENLYZE_BASE_URL, **kwargs: Any
+        self,
+        *,
+        token: str,
+        base_url: str | httpx.URL,
+        **kwargs: Any,
     ):
         super().__init__(
-            token,
+            token=token,
             base_url=httpx.URL(base_url).join(PRODUCTION_RUNS_API_SUB_PATH),
             **kwargs,
         )

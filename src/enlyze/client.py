@@ -8,7 +8,10 @@ import enlyze.models as user_models
 from enlyze.api_clients.production_runs.client import ProductionRunsApiClient
 from enlyze.api_clients.production_runs.models import ProductionRun
 from enlyze.api_clients.timeseries.client import TimeseriesApiClient
-from enlyze.constants import VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR
+from enlyze.constants import (
+    ENLYZE_BASE_URL,
+    VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR,
+)
 from enlyze.errors import EnlyzeError
 from enlyze.validators import (
     validate_datetime,
@@ -49,9 +52,15 @@ class EnlyzeClient:
 
     """
 
-    def __init__(self, token: str) -> None:
-        self._timeseries_api_client = TimeseriesApiClient(token=token)
-        self._production_runs_api_client = ProductionRunsApiClient(token=token)
+    def __init__(self, token: str, *, _base_url: str | None = None) -> None:
+        self._timeseries_api_client = TimeseriesApiClient(
+            token=token,
+            base_url=_base_url or ENLYZE_BASE_URL,
+        )
+        self._production_runs_api_client = ProductionRunsApiClient(
+            token=token,
+            base_url=_base_url or ENLYZE_BASE_URL,
+        )
 
     def _get_sites(self) -> Iterator[timeseries_api_models.Site]:
         """Get all sites from the API"""

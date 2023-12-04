@@ -9,7 +9,7 @@ import httpx
 from pydantic import BaseModel, ValidationError
 
 from enlyze.auth import TokenAuth
-from enlyze.constants import ENLYZE_BASE_URL, HTTPX_TIMEOUT
+from enlyze.constants import HTTPX_TIMEOUT
 from enlyze.errors import EnlyzeError, InvalidTokenError
 
 
@@ -51,9 +51,9 @@ class ApiBaseClient(ABC, Generic[R]):
 
     def __init__(
         self,
-        token: str,
         *,
-        base_url: str | httpx.URL = ENLYZE_BASE_URL,
+        token: str,
+        base_url: str | httpx.URL,
         timeout: float = HTTPX_TIMEOUT,
     ):
         self._client = httpx.Client(
