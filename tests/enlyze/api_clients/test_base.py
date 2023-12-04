@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, call, patch
 import httpx
 import pytest
 import respx
-from hypothesis import given
+from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
 from enlyze.api_clients.base import (
@@ -64,11 +64,6 @@ def paginated_response_no_next_page(response_data_integers, last_page_metadata):
 
 
 @pytest.fixture
-def base_url():
-    return "http://x"
-
-
-@pytest.fixture
 def base_client(auth_token, string_model, base_url):
     mock_has_more = MagicMock()
     mock_transform_paginated_response_data = MagicMock(side_effect=lambda e: e)
@@ -88,13 +83,14 @@ def base_client(auth_token, string_model, base_url):
         yield client
 
 
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(
     token=st.text(string.printable, min_size=1),
 )
 @respx.mock
-def test_token_auth(token):
+def test_token_auth(token, base_url):
     with patch.multiple(ApiBaseClient, __abstractmethods__=set()):
-        client = ApiBaseClient(token=token, base_url="http://x")
+        client = ApiBaseClient(token=token, base_url=base_url)
 
     route_is_authenticated = respx.get(
         "",
@@ -283,9 +279,11 @@ def test_get_paginated_transform_paginated_data(
     assert data == expected_data
 
 
-def test_transform_paginated_data_returns_unmutated_element_by_default(auth_token):
+def test_transform_paginated_data_returns_unmutated_element_by_default(
+    auth_token, base_url
+):
     with patch.multiple(ApiBaseClient, __abstractmethods__=set()):
-        client = ApiBaseClient(token=auth_token, base_url="http://x")
+        client = ApiBaseClient(token=auth_token, base_url=base_url)
         data = [1, 2, 3]
         value = client._transform_paginated_response_data(data)
         assert data == value

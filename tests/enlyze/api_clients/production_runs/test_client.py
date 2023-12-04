@@ -36,11 +36,6 @@ def paginated_response_with_next_page(response_data, metadata_next_page):
 
 
 @pytest.fixture
-def base_url():
-    return "http://x"
-
-
-@pytest.fixture
 def production_runs_client(auth_token, base_url):
     return ProductionRunsApiClient(token=auth_token, base_url=base_url)
 

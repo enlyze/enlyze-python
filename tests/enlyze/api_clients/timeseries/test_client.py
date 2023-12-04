@@ -35,11 +35,6 @@ def paginated_response_with_next_page(endpoint):
 
 
 @pytest.fixture
-def base_url():
-    return "http://x"
-
-
-@pytest.fixture
 def timeseries_client(auth_token, base_url):
     return TimeseriesApiClient(token=auth_token, base_url=base_url)
 

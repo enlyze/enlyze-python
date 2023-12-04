@@ -17,3 +17,8 @@ def string_model():
 @pytest.fixture
 def endpoint():
     return "https://my-endpoint.com"
+
+
+@pytest.fixture
+def base_url():
+    return "http://api-client-base"
