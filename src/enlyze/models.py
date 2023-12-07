@@ -151,7 +151,8 @@ class TimeseriesData:
         <python:datetime-naive-aware>` :py:class:`datetime.datetime` localized in UTC.
 
         :param use_display_names: Whether to return display names instead of variable
-            UUIDs. If there is no display name fall back to UUID.
+            UUIDs. If there is no display name, fall back to UUID. Display names aren't
+            guaranteed to be unique, duplicate columns will not be returned.
 
         :returns: Iterator over rows
 
@@ -179,7 +180,9 @@ class TimeseriesData:
         represented as a column named by its UUID.
 
         :param use_display_names: Whether to return display names instead of variable
-            UUIDs. If there is no display name fall back to UUID.
+            UUIDs. If there is no display name, fall back to UUID. Display names aren't
+            guaranteed to be unique, so the DataFrame may contain multiple columns with
+            the same name.
 
         :returns: DataFrame with timeseries data indexed by time
 
