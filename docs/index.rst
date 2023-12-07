@@ -14,6 +14,7 @@ User's Guide
 
     installation
     quickstart
+    examples
     concepts
     client
     models
