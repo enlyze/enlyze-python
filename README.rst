@@ -64,3 +64,9 @@ so:*
 .. code-block:: console
 
     $ export PYENCHANT_LIBRARY_PATH=/opt/homebrew/lib/libenchant-2.dylib
+
+
+Examples
+--------------------------------
+You can find examples of how to use the Python SDK here: `Notebooks <examples/notebooks>`_
+
