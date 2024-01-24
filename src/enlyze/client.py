@@ -96,7 +96,6 @@ class EnlyzeClient:
 
         :param site: Only get appliances of this site. Gets all appliances of the
             organization if None.
-        :type site: :class:`~enlyze.models.Site` or None
 
         :raises: |token-error|
 
@@ -138,7 +137,6 @@ class EnlyzeClient:
         """Retrieve all variables of an :ref:`appliance <appliance>`.
 
         :param appliance: The appliance for which to get all variables.
-        :type appliance: :class:`~enlyze.models.Appliance`
 
         :raises: |token-error|
 
