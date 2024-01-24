@@ -75,7 +75,7 @@ jobs:
 
       - name: Report test coverage
         if: ${{ matrix.coverage-report == true }}
-        uses: rhs/pr-comment@1.0.4
+        uses: enlyze/pr-comment@v1.0.5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
