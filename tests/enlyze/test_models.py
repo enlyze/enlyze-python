@@ -7,11 +7,18 @@ from hypothesis import given
 from enlyze.models import ProductionRun, ProductionRuns, _get_optional_dataclass_fields
 
 # https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timestamp-limitations
+PANDAS_MIN_DATETIME = datetime(1677, 9, 21, 0, 12, 44)
+PANDAS_MAX_DATETIME = datetime(2262, 4, 11, 23, 47, 16)
+
+# https://github.com/python/cpython/issues/94414
+WINDOWS_MIN_DATETIME = datetime(1970, 1, 2, 1, 0, 0)
+WINDOWS_MAX_DATETIME = datetime(3001, 1, 19, 7, 59, 59)
+
 st.register_type_strategy(
     datetime,
     st.datetimes(
-        min_value=datetime(1677, 9, 21, 0, 12, 44),
-        max_value=datetime(2262, 4, 11, 23, 47, 16),
+        min_value=max(PANDAS_MIN_DATETIME, WINDOWS_MIN_DATETIME),
+        max_value=min(PANDAS_MAX_DATETIME, WINDOWS_MAX_DATETIME),
     ),
 )
 
