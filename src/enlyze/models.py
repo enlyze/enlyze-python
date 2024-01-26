@@ -230,7 +230,7 @@ class Quantity:
 
 @dataclass(frozen=True)
 class Product:
-    """Representation of a product that is produced on an machine"""
+    """Representation of a product that is produced on a machine"""
 
     #: The identifier of the product
     code: str

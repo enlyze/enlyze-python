@@ -124,7 +124,7 @@ class EnlyzeClient:
     def _get_variables(
         self, machine_uuid: UUID
     ) -> Iterator[timeseries_api_models.Variable]:
-        """Get variables for an machine from the API."""
+        """Get variables for a machine from the API."""
         return self._timeseries_api_client.get_paginated(
             "variables",
             timeseries_api_models.Variable,

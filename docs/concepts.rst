@@ -20,8 +20,8 @@ Machine
 
 An *machine* refers to a machine that your organization uses to produce goods. For
 example, a CNC-milling center, a blown film extrusion line or an injection molding
-machine all represent an machine in the ENLYZE platform. Just as a physical machine is
-located at one production site, an machine in the ENLYZE platform is associated with
+machine all represent a machine in the ENLYZE platform. Just as a physical machine is
+located at one production site, a machine in the ENLYZE platform is associated with
 exactly one :ref:`site <site>`.
 
 .. _variable:
@@ -73,7 +73,7 @@ Product
 
 A *product* is the output of the production process which is executed by an
 :ref:`machine <machine>`, driven by a :ref:`production order <production_order>`. In
-the real world, an machine might have some additional outputs, but only the main
+the real world, a machine might have some additional outputs, but only the main
 output (the product) is modeled in the ENLYZE platform. Similarly to the production order,
 a product is referenced by an identifier originating from a customer's system, that gets
 synchronized into the ENLYZE platform.
