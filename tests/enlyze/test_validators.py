@@ -69,12 +69,10 @@ class TestValidateTimeseriesArguments:
         variable=VARIABLE_STRATEGY,
     )
     def test_validate_timeseries_arguments(self, start, end, variable):
-        start, end, appliance_uuid = validate_timeseries_arguments(
-            start, end, [variable]
-        )
+        start, end, machine_uuid = validate_timeseries_arguments(start, end, [variable])
         assert start
         assert end
-        assert UUID(appliance_uuid)
+        assert UUID(machine_uuid)
 
     @given(variable=VARIABLE_STRATEGY)
     def test_validate_start_must_be_earlier_than_end(self, variable):
@@ -97,7 +95,7 @@ class TestValidateTimeseriesArguments:
         variable1=VARIABLE_STRATEGY,
         variable2=VARIABLE_STRATEGY,
     )
-    def test_variables_with_different_appliance(self, start, end, variable1, variable2):
+    def test_variables_with_different_machine(self, start, end, variable1, variable2):
         with pytest.raises(EnlyzeError):
             validate_timeseries_arguments(start, end, [variable1, variable2])
 

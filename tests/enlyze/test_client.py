@@ -61,8 +61,8 @@ production_runs_strategy = st.lists(
         uuid=st.uuids(),
         start=datetime_before_today_strategy,
         end=datetime_today_until_now_strategy,
-        appliance=st.builds(
-            production_runs_api_models.Appliance, uuid=st.just(APPLIANCE_UUID)
+        machine=st.builds(
+            production_runs_api_models.Machine, uuid=st.just(APPLIANCE_UUID)
         ),
         product=st.builds(
             production_runs_api_models.Product,
@@ -142,58 +142,58 @@ def test_get_sites(site1, site2):
 @given(
     site1=st.builds(timeseries_api_models.Site, id=st.just(1)),
     site2=st.builds(timeseries_api_models.Site, id=st.just(2)),
-    appliance1=st.builds(timeseries_api_models.Appliance, site=st.just(1)),
-    appliance2=st.builds(timeseries_api_models.Appliance, site=st.just(2)),
+    machine1=st.builds(timeseries_api_models.Machine, site=st.just(1)),
+    machine2=st.builds(timeseries_api_models.Machine, site=st.just(2)),
 )
-def test_get_appliances(site1, site2, appliance1, appliance2):
+def test_get_machines(site1, site2, machine1, machine2):
     client = make_client()
 
     with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
         mock.get("appliances").mock(
-            PaginatedTimeseriesApiResponse(data=[appliance1, appliance2])
+            PaginatedTimeseriesApiResponse(data=[machine1, machine2])
         )
         mock.get("sites").mock(PaginatedTimeseriesApiResponse(data=[site1, site2]))
 
-        all_appliances = client.get_appliances()
-        assert all_appliances == [
-            appliance1.to_user_model(site1.to_user_model()),
-            appliance2.to_user_model(site2.to_user_model()),
+        all_machines = client.get_machines()
+        assert all_machines == [
+            machine1.to_user_model(site1.to_user_model()),
+            machine2.to_user_model(site2.to_user_model()),
         ]
 
-        appliances_site2 = client.get_appliances(site2.to_user_model())
-        assert appliances_site2 == [
-            appliance2.to_user_model(site2.to_user_model()),
+        machines_site2 = client.get_machines(site2.to_user_model())
+        assert machines_site2 == [
+            machine2.to_user_model(site2.to_user_model()),
         ]
 
 
 @given(
-    appliance=st.builds(timeseries_api_models.Appliance),
+    machine=st.builds(timeseries_api_models.Machine),
 )
-def test_get_appliances_site_not_found(appliance):
+def test_get_machines_site_not_found(machine):
     client = make_client()
 
     with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
         mock.get("sites").mock(PaginatedTimeseriesApiResponse(data=[]))
-        mock.get("appliances").mock(PaginatedTimeseriesApiResponse(data=[appliance]))
+        mock.get("appliances").mock(PaginatedTimeseriesApiResponse(data=[machine]))
 
-        assert client.get_appliances() == []
+        assert client.get_machines() == []
 
 
 @given(
-    appliance=st.builds(user_models.Appliance),
+    machine=st.builds(user_models.Machine),
     var1=st.builds(timeseries_api_models.Variable),
     var2=st.builds(timeseries_api_models.Variable),
 )
-def test_get_variables(appliance, var1, var2):
+def test_get_variables(machine, var1, var2):
     client = make_client()
 
     with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
         mock.get("variables").mock(PaginatedTimeseriesApiResponse(data=[var1, var2]))
-        variables = client.get_variables(appliance)
+        variables = client.get_variables(machine)
 
     assert variables == [
-        var1.to_user_model(appliance),
-        var2.to_user_model(appliance),
+        var1.to_user_model(machine),
+        var2.to_user_model(machine),
     ]
 
 
@@ -354,17 +354,17 @@ def test_get_timeseries_raises_invalid_time_bounds(variable):
 
 
 @given(
-    # we rely on variable{1,2}.appliance.uuid to be different because they are random
+    # we rely on variable{1,2}.machine.uuid to be different because they are random
     variable1=st.builds(user_models.Variable),
     variable2=st.builds(user_models.Variable),
 )
 @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
-def test_get_timeseries_raises_variables_of_different_appliances(
+def test_get_timeseries_raises_variables_of_different_machines(
     variable1, variable2, start_datetime, end_datetime
 ):
     client = make_client()
 
-    with pytest.raises(EnlyzeError, match="for more than one appliance"):
+    with pytest.raises(EnlyzeError, match="for more than one machine"):
         client.get_timeseries(start_datetime, end_datetime, [variable1, variable2])
 
 
@@ -396,8 +396,8 @@ def test_get_timeseries_raises_api_returned_no_timestamps(
         st.builds(user_models.Product, code=st.just(PRODUCT_CODE)),
         st.text(),
     ),
-    appliance=st.builds(
-        timeseries_api_models.Appliance,
+    machine=st.builds(
+        timeseries_api_models.Machine,
         site=st.just(SITE_ID),
         uuid=st.just(APPLIANCE_UUID),
     ),
@@ -409,7 +409,7 @@ def test_get_timeseries_raises_api_returned_no_timestamps(
 def test_get_production_runs(
     production_order,
     product,
-    appliance,
+    machine,
     site,
     start,
     end,
@@ -418,8 +418,8 @@ def test_get_production_runs(
     client = make_client()
 
     site_user_model = site.to_user_model()
-    appliance_user_model = appliance.to_user_model(site_user_model)
-    appliances_by_uuid = {appliance.uuid: appliance_user_model}
+    machine_user_model = machine.to_user_model(site_user_model)
+    machines_by_uuid = {machine.uuid: machine_user_model}
 
     with respx_mock_with_base_url(
         TIMESERIES_API_SUB_PATH
@@ -427,7 +427,7 @@ def test_get_production_runs(
         PRODUCTION_RUNS_API_SUB_PATH
     ) as production_runs_api_mock:
         timeseries_api_mock.get("appliances").mock(
-            PaginatedTimeseriesApiResponse(data=[appliance])
+            PaginatedTimeseriesApiResponse(data=[machine])
         )
         timeseries_api_mock.get("sites").mock(
             PaginatedTimeseriesApiResponse(data=[site])
@@ -441,14 +441,14 @@ def test_get_production_runs(
         result = client.get_production_runs(
             production_order=production_order,
             product=product,
-            appliance=appliance_user_model,
+            machine=machine_user_model,
             start=start,
             end=end,
         )
 
         assert (
             user_models.ProductionRuns(
-                [pr.to_user_model(appliances_by_uuid) for pr in production_runs]
+                [pr.to_user_model(machines_by_uuid) for pr in production_runs]
             )
             == result
         )
