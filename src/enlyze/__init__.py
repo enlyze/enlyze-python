@@ -1,9 +1,9 @@
 from .client import EnlyzeClient
 from .errors import EnlyzeError, InvalidTokenError
-from .models import Appliance, ResamplingMethod, Site, Variable
+from .models import Machine, ResamplingMethod, Site, Variable
 
 __all__ = [
-    "Appliance",
+    "Machine",
     "EnlyzeClient",
     "EnlyzeError",
     "InvalidTokenError",

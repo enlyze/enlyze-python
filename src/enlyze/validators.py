@@ -56,14 +56,14 @@ def validate_timeseries_arguments(
 
     start, end = validate_start_and_end(start, end)
 
-    appliance_uuids = frozenset(v.appliance.uuid for v in variables)
+    machine_uuids = frozenset(v.machine.uuid for v in variables)
 
-    if len(appliance_uuids) != 1:
+    if len(machine_uuids) != 1:
         raise EnlyzeError(
-            "Cannot request timeseries data for more than one appliance per request."
+            "Cannot request timeseries data for more than one machine per request."
         )
 
-    return start, end, str(next(iter(appliance_uuids)))
+    return start, end, str(next(iter(machine_uuids)))
 
 
 def validate_resampling_interval(

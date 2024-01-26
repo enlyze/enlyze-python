@@ -59,14 +59,14 @@ class Quantity(ProductionRunsApiModel):
         )
 
 
-class Appliance(ApiBaseModel):
+class Machine(ApiBaseModel):
     name: str
     uuid: UUID
 
 
 class ProductionRun(ProductionRunsApiModel):
     uuid: UUID
-    appliance: Appliance
+    machine: Machine
     average_throughput: Optional[float]
     production_order: str
     product: Product
@@ -81,7 +81,7 @@ class ProductionRun(ProductionRunsApiModel):
     productivity: Optional[OEEComponent]
 
     def to_user_model(
-        self, appliances_by_uuid: dict[UUID, user_models.Appliance]
+        self, machines_by_uuid: dict[UUID, user_models.Machine]
     ) -> user_models.ProductionRun:
         """Convert into a :ref:`user model <user_models>`"""
 
@@ -101,7 +101,7 @@ class ProductionRun(ProductionRunsApiModel):
 
         return user_models.ProductionRun(
             uuid=self.uuid,
-            appliance=appliances_by_uuid[self.appliance.uuid],
+            machine=machines_by_uuid[self.machine.uuid],
             average_throughput=self.average_throughput,
             production_order=self.production_order,
             product=self.product.to_user_model(),
