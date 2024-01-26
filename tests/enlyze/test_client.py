@@ -421,11 +421,12 @@ def test_get_production_runs(
     machine_user_model = machine.to_user_model(site_user_model)
     machines_by_uuid = {machine.uuid: machine_user_model}
 
-    with respx_mock_with_base_url(
-        TIMESERIES_API_SUB_PATH
-    ) as timeseries_api_mock, respx_mock_with_base_url(
-        PRODUCTION_RUNS_API_SUB_PATH
-    ) as production_runs_api_mock:
+    with (
+        respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as timeseries_api_mock,
+        respx_mock_with_base_url(
+            PRODUCTION_RUNS_API_SUB_PATH
+        ) as production_runs_api_mock,
+    ):
         timeseries_api_mock.get("appliances").mock(
             PaginatedTimeseriesApiResponse(data=[machine])
         )
