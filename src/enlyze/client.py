@@ -128,7 +128,7 @@ class EnlyzeClient:
         return self._timeseries_api_client.get_paginated(
             "variables",
             timeseries_api_models.Variable,
-            params={"machine": str(machine_uuid)},
+            params={"appliance": str(machine_uuid)},
         )
 
     def get_variables(
@@ -186,7 +186,7 @@ class EnlyzeClient:
             "timeseries",
             timeseries_api_models.TimeseriesData,
             params={
-                "machine": machine_uuid,
+                "appliance": machine_uuid,
                 "start_datetime": start.isoformat(),
                 "end_datetime": end.isoformat(),
                 "variables": ",".join(str(v.uuid) for v in variables),
@@ -266,7 +266,7 @@ class EnlyzeClient:
             "timeseries",
             timeseries_api_models.TimeseriesData,
             params={
-                "machine": machine_uuid,
+                "appliance": machine_uuid,
                 "start_datetime": start.isoformat(),
                 "end_datetime": end.isoformat(),
                 "variables": ",".join(variables_query_parameter_list),
@@ -298,7 +298,7 @@ class EnlyzeClient:
         filters = {
             "production_order": production_order,
             "product": product,
-            "machine": machine,
+            "appliance": machine,
             "start": start.isoformat() if start else None,
             "end": end.isoformat() if end else None,
         }
