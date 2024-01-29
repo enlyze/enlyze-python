@@ -18,7 +18,7 @@ a name and an address, which makes it easy to identify for humans.
 Machine
 ---------
 
-An *machine* refers to a machine that your organization uses to produce goods. For
+A *machine* refers to a machine that your organization uses to produce goods. For
 example, a CNC-milling center, a blown film extrusion line or an injection molding
 machine all represent a machine in the ENLYZE platform. Just as a physical machine is
 located at one production site, a machine in the ENLYZE platform is associated with
