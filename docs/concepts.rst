@@ -71,7 +71,7 @@ for a single production order.
 Product
 -------
 
-A *product* is the output of the production process which is executed by an
+A *product* is the output of the production process which is executed by a
 :ref:`machine <machine>`, driven by a :ref:`production order <production_order>`. In
 the real world, a machine might have some additional outputs, but only the main
 output (the product) is modeled in the ENLYZE platform. Similarly to the production order,
