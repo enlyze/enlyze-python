@@ -54,7 +54,7 @@ Production Run
 --------------
 
 A *production run* is a time frame within which a machine was producing a :ref:`product
-<product>` on an :ref:`machine <machine>` in order to complete a :ref:`production
+<product>` on a :ref:`machine <machine>` in order to complete a :ref:`production
 order <production_order>`. A production run always has a beginning and, if it's not
 still running, it also has an end.
 
