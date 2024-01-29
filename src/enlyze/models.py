@@ -27,7 +27,7 @@ class Site:
 
 @dataclass(frozen=True)
 class Machine:
-    """Representation of an :ref:`machine <machine>` in the ENLYZE platform.
+    """Representation of a :ref:`machine <machine>` in the ENLYZE platform.
 
     Contains details about the machine.
 
