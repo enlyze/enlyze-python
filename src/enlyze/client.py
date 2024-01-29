@@ -134,7 +134,7 @@ class EnlyzeClient:
     def get_variables(
         self, machine: user_models.Machine
     ) -> Sequence[user_models.Variable]:
-        """Retrieve all variables of an :ref:`machine <machine>`.
+        """Retrieve all variables of a :ref:`machine <machine>`.
 
         :param machine: The machine for which to get all variables.
 
