@@ -8,7 +8,7 @@ Data models
 .. autoclass:: Site()
     :members:
 
-.. autoclass:: Appliance()
+.. autoclass:: Machine()
     :members:
 
 .. autoclass:: Variable()

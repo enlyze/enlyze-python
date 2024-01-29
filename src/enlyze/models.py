@@ -26,23 +26,23 @@ class Site:
 
 
 @dataclass(frozen=True)
-class Appliance:
-    """Representation of an :ref:`appliance <appliance>` in the ENLYZE platform.
+class Machine:
+    """Representation of a :ref:`machine <machine>` in the ENLYZE platform.
 
-    Contains details about the appliance.
+    Contains details about the machine.
 
     """
 
-    #: Stable identifier of the appliance.
+    #: Stable identifier of the machine.
     uuid: UUID
 
-    #: Display name of the appliance.
+    #: Display name of the machine.
     display_name: str
 
-    #: The date when the appliance has been connected to the ENLYZE platform.
+    #: The date when the machine has been connected to the ENLYZE platform.
     genesis_date: date
 
-    #: The site where the appliance is located.
+    #: The site where the machine is located.
     site: Site
 
 
@@ -99,8 +99,8 @@ class Variable:
     #: The underlying data type of the variable.
     data_type: VariableDataType
 
-    #: The appliance on which this variable is read out.
-    appliance: Appliance
+    #: The machine on which this variable is read out.
+    machine: Machine
 
 
 @dataclass(frozen=True)
@@ -230,7 +230,7 @@ class Quantity:
 
 @dataclass(frozen=True)
 class Product:
-    """Representation of a product that is produced on an appliance"""
+    """Representation of a product that is produced on a machine"""
 
     #: The identifier of the product
     code: str
@@ -250,8 +250,8 @@ class ProductionRun:
     #: The UUID of the production run
     uuid: UUID
 
-    #: The appliance the production run was executed on.
-    appliance: Appliance
+    #: The machine the production run was executed on.
+    machine: Machine
 
     #: The average throughput of the production run excluding downtimes.
     average_throughput: Optional[float]
@@ -277,10 +277,10 @@ class ProductionRun:
     #: The amount of product produced that can be sold.
     quantity_yield: Optional[Quantity]
 
-    #: OEE component that reflects when the appliance did not produce.
+    #: OEE component that reflects when the machine did not produce.
     availability: Optional[OEEComponent]
 
-    #: OEE component that reflects how fast the appliance has run.
+    #: OEE component that reflects how fast the machine has run.
     performance: Optional[OEEComponent]
 
     #: OEE component that reflects how much defects have been produced.

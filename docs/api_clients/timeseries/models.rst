@@ -11,7 +11,7 @@ Models
     :exclude-members: model_config, model_fields
     :show-inheritance:
 
-.. autoclass:: Appliance()
+.. autoclass:: Machine()
     :members:
     :undoc-members:
     :exclude-members: model_config, model_fields

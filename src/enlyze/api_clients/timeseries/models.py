@@ -32,16 +32,16 @@ class Site(TimeseriesApiModel):
         )
 
 
-class Appliance(TimeseriesApiModel):
+class Machine(TimeseriesApiModel):
     uuid: UUID
     name: str
     genesis_date: date
     site: int
 
-    def to_user_model(self, site: user_models.Site) -> user_models.Appliance:
+    def to_user_model(self, site: user_models.Site) -> user_models.Machine:
         """Convert into a :ref:`user model <user_models>`"""
 
-        return user_models.Appliance(
+        return user_models.Machine(
             uuid=self.uuid,
             display_name=self.name,
             genesis_date=self.genesis_date,
@@ -55,7 +55,7 @@ class Variable(TimeseriesApiModel):
     unit: Optional[str]
     data_type: user_models.VariableDataType
 
-    def to_user_model(self, appliance: user_models.Appliance) -> user_models.Variable:
+    def to_user_model(self, machine: user_models.Machine) -> user_models.Variable:
         """Convert into a :ref:`user model <user_models>`."""
 
         return user_models.Variable(
@@ -63,7 +63,7 @@ class Variable(TimeseriesApiModel):
             display_name=self.display_name,
             unit=self.unit,
             data_type=self.data_type,
-            appliance=appliance,
+            machine=machine,
         )
 
 
