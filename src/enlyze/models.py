@@ -1,3 +1,4 @@
+import collections
 import typing
 from dataclasses import asdict, dataclass, is_dataclass
 from datetime import date, datetime, timedelta, timezone
@@ -31,6 +32,65 @@ def _get_optional_dataclass_fields(cls: object) -> set[str]:
             optional_fields.add(field)
 
     return optional_fields
+
+
+def dict_merge(dct, merge_dct):
+    dct = dct.copy()
+
+    for key in merge_dct:
+        if (
+            key in dct
+            and isinstance(dct[key], dict)
+            and isinstance(merge_dct[key], collections.abc.Mapping)
+        ):
+            dct[key] = dict_merge(dct[key], merge_dct[key])
+        else:
+            dct[key] = merge_dct[key]
+
+    return dct
+
+
+def dataclass_schema(cls):
+    schema = {}
+    hints = typing.get_type_hints(cls)
+    for field, typ in hints.items():
+        field_types = [typ]
+
+        if typing.get_origin(typ) == typing.Union:
+            field_types = typing.get_args(typ)
+
+        for field_type in field_types:
+            if is_dataclass(field_type):
+                field_schema = dataclass_schema(field_type)
+            else:
+                field_schema = {}
+
+            schema = dict_merge(schema, {field: field_schema})
+
+    return schema
+
+
+def flatten_schema(schema: dict, separator: str = "_", level=None) -> list[str]:
+    flat_schema = []
+    for field, subschema in schema.items():
+        current_level = (level or []) + [field]
+        if subschema:
+            flat_schema.extend(
+                flatten_schema(subschema, separator, level=current_level)
+            )
+        else:
+            flat_schema.append(separator.join(current_level))
+
+    return flat_schema
+
+
+def dataframe_ensure_schema(df: pandas.DataFrame, obj: object) -> pandas.DataFrame:
+    schema = dataclass_schema(obj)
+    flat_schema = flatten_schema(schema, separator=".")
+
+    missing_cols = set(flat_schema) - set(df.columns)
+
+    return df.assign(**{col: None for col in missing_cols})
 
 
 @dataclass(frozen=True)
@@ -393,4 +453,6 @@ class ProductionRuns(list[ProductionRun]):
         if not self:
             return pandas.DataFrame()
 
-        return pandas.json_normalize(self.to_dicts(exclude_unset_objects=True))
+        df = pandas.json_normalize(self.to_dicts(exclude_unset_objects=False))
+
+        return dataframe_ensure_schema(df, ProductionRun)

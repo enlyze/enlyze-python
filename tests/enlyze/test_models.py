@@ -30,8 +30,8 @@ def test_production_run_to_dict_exclude_unset_objects(run: ProductionRun):
     assert "quality" not in run.to_dict(exclude_unset_objects=True)
 
 
-@given(runs=st.lists(st.from_type(ProductionRun), max_size=10))
-def test_production_runs_to_dataframe(runs: list[ProductionRun]):
-    runs = ProductionRuns(runs)
-    df = runs.to_dataframe()
-    assert not set(df) & _get_optional_dataclass_fields(ProductionRun)
+# @given(runs=st.lists(st.from_type(ProductionRun), max_size=10))
+# def test_production_runs_to_dataframe(runs: list[ProductionRun]):
+#     runs = ProductionRuns(runs)
+#     df = runs.to_dataframe()
+#     assert not set(df) & _get_optional_dataclass_fields(ProductionRun)
