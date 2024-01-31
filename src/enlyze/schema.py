@@ -33,7 +33,7 @@ def _flat_dataclass_schema(
                 flat.extend(
                     _flat_dataclass_schema(field_type, path_separator, current_path)
                 )
-            elif field_type != type(None):
+            elif field_type is not type(None):
                 flat.append(path_separator.join(current_path))
 
     # dedupe while preserving order
@@ -45,7 +45,7 @@ def dataframe_ensure_schema(
     dataclass_obj_or_type: DataclassTypeOrInstance,
     path_separator: str = ".",
 ) -> pandas.DataFrame:
-    """Add missing columns to ``df`` based on flattened schema of ``dataclass_obj_or_type``"""
+    """Add missing columns to ``df`` based on flattened dataclass schema"""
 
     flat_schema = _flat_dataclass_schema(
         dataclass_obj_or_type,
