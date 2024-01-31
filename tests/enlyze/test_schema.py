@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import pandas
 
-from enlyze.schema import dataframe_ensure_schema  # get_optional_dataclass_fields,
+from enlyze.schema import dataframe_ensure_schema
 
 
 @dataclass
@@ -18,10 +18,6 @@ class Thing:
     multiple_but_required: float | str | Some
 
 
-# def test_get_optional_dataclass_fields():
-#     assert get_optional_dataclass_fields(Thing) == {"maybe_some"}
-
-
 def test_dataframe_ensure_schema():
     df = pandas.DataFrame()
 
@@ -34,13 +30,3 @@ def test_dataframe_ensure_schema():
         "multiple_but_required",
         "multiple_but_required|a",
     }
-
-
-# def test_immediate_flat():
-#     assert _immediate_flat_dataclass_schema(Thing, path_separator="|") == {
-#         "number",
-#         "maybe_string",
-#         "maybe_some|a",
-#         "multiple_but_required",
-#         "multiple_but_required|a",
-#     }
