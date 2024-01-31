@@ -49,6 +49,9 @@ nitpick_ignore_regex = [
     ("py:class", r".*\.T"),
     ("py:.*", r"httpx\..*"),
 ]
+nitpick_ignore = [
+    ("py:class", "ComputedFieldInfo"),
+]
 
 autodoc_default_options = {"exclude-members": "__weakref__, __init__, __new__"}
 autodoc_member_order = "bysource"
