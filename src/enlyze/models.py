@@ -7,7 +7,7 @@ from uuid import UUID
 
 import pandas
 
-from enlyze.schema import dataframe_ensure_schema  # , get_optional_dataclass_fields
+from enlyze.schema import dataframe_ensure_schema
 
 
 @dataclass(frozen=True)
