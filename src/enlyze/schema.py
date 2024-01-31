@@ -55,4 +55,8 @@ def dataframe_ensure_schema(
     add_colums = set(flat_schema) - set(df.columns)
     remove_columns = set(df.columns) - set(flat_schema)
 
-    return df.assign(**{col: None for col in add_colums}).drop(columns=remove_columns)
+    return df.assign(
+        **{col: None for col in add_colums},
+    ).drop(
+        columns=list(remove_columns),
+    )
