@@ -7,6 +7,8 @@ from uuid import UUID
 
 import pandas
 
+from enlyze.schema import dataframe_ensure_schema
+
 
 @dataclass(frozen=True)
 class Site:
@@ -300,13 +302,15 @@ class ProductionRuns(list[ProductionRun]):
         ``end`` of every production run will be represented as :ref:`timezone-aware
         <python:datetime-naive-aware>` :py:class:`datetime.datetime` localized in UTC.
 
-        :returns: DataFrame with production runs
-
+        :returns: DataFrame with production runs.
         """
         if not self:
             return pandas.DataFrame()
 
-        df = pandas.json_normalize([asdict(run) for run in self])
+        path_separator = "."
+
+        df = pandas.json_normalize([asdict(run) for run in self], sep=path_separator)
         df.start = pandas.to_datetime(df.start, utc=True, format="ISO8601")
         df.end = pandas.to_datetime(df.end, utc=True, format="ISO8601")
-        return df
+
+        return dataframe_ensure_schema(df, ProductionRun, path_separator=path_separator)
