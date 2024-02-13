@@ -1,5 +1,5 @@
 from datetime import datetime
-from functools import cache
+from functools import cache, reduce
 from typing import Iterator, Mapping, Optional, Sequence
 from uuid import UUID
 
@@ -10,9 +10,11 @@ from enlyze.api_clients.production_runs.models import ProductionRun
 from enlyze.api_clients.timeseries.client import TimeseriesApiClient
 from enlyze.constants import (
     ENLYZE_BASE_URL,
+    MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST,
     VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR,
 )
 from enlyze.errors import EnlyzeError
+from enlyze.iterable_tools import chunk
 from enlyze.validators import (
     validate_datetime,
     validate_resampling_interval,
@@ -182,20 +184,36 @@ class EnlyzeClient:
 
         start, end, machine_uuid = validate_timeseries_arguments(start, end, variables)
 
-        pages = self._timeseries_api_client.get_paginated(
-            "timeseries",
-            timeseries_api_models.TimeseriesData,
-            params={
-                "appliance": machine_uuid,
-                "start_datetime": start.isoformat(),
-                "end_datetime": end.isoformat(),
-                "variables": ",".join(str(v.uuid) for v in variables),
-            },
+        variables_uuids = [str(v.uuid) for v in variables]
+
+        try:
+            chunks = chunk(
+                variables_uuids, MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST
+            )
+        except ValueError as e:
+            raise EnlyzeError from e
+
+        chunks_pages = (
+            self._timeseries_api_client.get_paginated(
+                "timeseries",
+                timeseries_api_models.TimeseriesData,
+                params={
+                    "appliance": machine_uuid,
+                    "start_datetime": start.isoformat(),
+                    "end_datetime": end.isoformat(),
+                    "variables": ",".join(chunk),
+                },
+            )
+            for chunk in chunks
         )
 
-        timeseries_data = _get_timeseries_data_from_pages(pages)
-        if timeseries_data is None:
+        timeseries_data_chunked = [
+            _get_timeseries_data_from_pages(pages) for pages in chunks_pages
+        ]
+        if not timeseries_data_chunked or None in timeseries_data_chunked:
             return None
+
+        timeseries_data = reduce(lambda x, y: x.merge(y), timeseries_data_chunked)
 
         return timeseries_data.to_user_model(
             start=start,
@@ -262,21 +280,36 @@ class EnlyzeClient:
         )
         validate_resampling_interval(resampling_interval)
 
-        pages = self._timeseries_api_client.get_paginated(
-            "timeseries",
-            timeseries_api_models.TimeseriesData,
-            params={
-                "appliance": machine_uuid,
-                "start_datetime": start.isoformat(),
-                "end_datetime": end.isoformat(),
-                "variables": ",".join(variables_query_parameter_list),
-                "resampling_interval": resampling_interval,
-            },
+        try:
+            chunks = chunk(
+                variables_query_parameter_list,
+                MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST,
+            )
+        except ValueError as e:
+            raise EnlyzeError from e
+
+        chunks_pages = (
+            self._timeseries_api_client.get_paginated(
+                "timeseries",
+                timeseries_api_models.TimeseriesData,
+                params={
+                    "appliance": machine_uuid,
+                    "start_datetime": start.isoformat(),
+                    "end_datetime": end.isoformat(),
+                    "variables": ",".join(chunk),
+                    "resampling_interval": resampling_interval,
+                },
+            )
+            for chunk in chunks
         )
 
-        timeseries_data = _get_timeseries_data_from_pages(pages)
-        if timeseries_data is None:
+        timeseries_data_chunked = [
+            _get_timeseries_data_from_pages(pages) for pages in chunks_pages
+        ]
+        if not timeseries_data_chunked or None in timeseries_data_chunked:
             return None
+
+        timeseries_data = reduce(lambda x, y: x.merge(y), timeseries_data_chunked)
 
         return timeseries_data.to_user_model(
             start=start,

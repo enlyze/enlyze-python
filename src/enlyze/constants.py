@@ -18,3 +18,7 @@ VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR = "||"
 
 #: The minimum allowed resampling interval when resampling timeseries data.
 MINIMUM_RESAMPLING_INTERVAL = 10
+
+#: The maximum number of variables that can be used in a single request when querying
+#: timeseries data.
+MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST = 100
