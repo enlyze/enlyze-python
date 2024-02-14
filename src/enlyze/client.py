@@ -1,6 +1,7 @@
+from collections import abc
 from datetime import datetime
 from functools import cache, reduce
-from typing import Iterator, Mapping, Optional, Sequence
+from typing import Any, Iterator, Mapping, Optional, Sequence, Tuple, Union
 from uuid import UUID
 
 import enlyze.api_clients.timeseries.models as timeseries_api_models
@@ -42,6 +43,36 @@ def _get_timeseries_data_from_pages(
         timeseries_data.extend(page)
 
     return timeseries_data
+
+
+def _get_variables_sequence_and_query_parameter_list(
+    variables: Union[
+        Sequence[user_models.Variable],
+        Mapping[user_models.Variable, user_models.ResamplingMethod],
+    ],
+    resampling_interval: Optional[int],
+) -> Tuple[Sequence[user_models.Variable], Sequence[str]]:
+    if isinstance(variables, abc.Sequence) and resampling_interval is not None:
+        raise ValueError("`variables` must be a mapping {variable: ResamplingMethod}")
+
+    if resampling_interval:
+        validate_resampling_interval(resampling_interval)
+        variables_sequence = []
+        variables_query_parameter_list = []
+        for variable, resampling_method in variables.items():
+            variables_sequence.append(variable)
+            variables_query_parameter_list.append(
+                f"{variable.uuid}"
+                f"{VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR}"
+                f"{resampling_method.value}"
+            )
+
+            validate_resampling_method_for_data_type(
+                resampling_method, variable.data_type
+            )
+        return variables_sequence, variables_query_parameter_list
+
+    return variables, [str(v.uuid) for v in variables]
 
 
 class EnlyzeClient:
@@ -152,6 +183,85 @@ class EnlyzeClient:
             for variable in self._get_variables(machine.uuid)
         ]
 
+    def _get_paginated_timeseries(
+        self,
+        *,
+        machine_uuid: str,
+        start: datetime,
+        end: datetime,
+        variables: Sequence[str],
+        resampling_interval: Optional[int],
+    ) -> Iterator[timeseries_api_models.TimeseriesData]:
+        params: dict[str, Any] = {
+            "appliance": machine_uuid,
+            "start_datetime": start.isoformat(),
+            "end_datetime": end.isoformat(),
+            "variables": ",".join(variables),
+        }
+
+        if resampling_interval:
+            params["resampling_interval"] = resampling_interval
+
+        return self._timeseries_api_client.get_paginated(
+            "timeseries", timeseries_api_models.TimeseriesData, params=params
+        )
+
+    def _get_timeseries(
+        self,
+        start: datetime,
+        end: datetime,
+        variables: Union[
+            Sequence[user_models.Variable],
+            Mapping[user_models.Variable, user_models.ResamplingMethod],
+        ],
+        resampling_interval: Optional[int] = None,
+    ) -> Optional[user_models.TimeseriesData]:
+        try:
+            variables_sequence, variables_query_parameter_list = (
+                _get_variables_sequence_and_query_parameter_list(
+                    variables, resampling_interval
+                )
+            )
+        except ValueError as e:
+            raise EnlyzeError from e
+
+        start, end, machine_uuid = validate_timeseries_arguments(
+            start, end, variables_sequence
+        )
+
+        try:
+            chunks = chunk(
+                variables_query_parameter_list,
+                MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST,
+            )
+        except ValueError as e:
+            raise EnlyzeError from e
+
+        chunks_pages = (
+            self._get_paginated_timeseries(
+                machine_uuid=machine_uuid,
+                start=start,
+                end=end,
+                variables=chunk,
+                resampling_interval=resampling_interval,
+            )
+            for chunk in chunks
+        )
+
+        timeseries_data_chunked = [
+            _get_timeseries_data_from_pages(pages) for pages in chunks_pages
+        ]
+        if not timeseries_data_chunked or None in timeseries_data_chunked:
+            return None
+
+        timeseries_data = reduce(lambda x, y: x.merge(y), timeseries_data_chunked)
+
+        return timeseries_data.to_user_model(
+            start=start,
+            end=end,
+            variables=variables_sequence,
+        )
+
     def get_timeseries(
         self,
         start: datetime,
@@ -182,44 +292,7 @@ class EnlyzeClient:
 
         """
 
-        start, end, machine_uuid = validate_timeseries_arguments(start, end, variables)
-
-        variables_uuids = [str(v.uuid) for v in variables]
-
-        try:
-            chunks = chunk(
-                variables_uuids, MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST
-            )
-        except ValueError as e:
-            raise EnlyzeError from e
-
-        chunks_pages = (
-            self._timeseries_api_client.get_paginated(
-                "timeseries",
-                timeseries_api_models.TimeseriesData,
-                params={
-                    "appliance": machine_uuid,
-                    "start_datetime": start.isoformat(),
-                    "end_datetime": end.isoformat(),
-                    "variables": ",".join(chunk),
-                },
-            )
-            for chunk in chunks
-        )
-
-        timeseries_data_chunked = [
-            _get_timeseries_data_from_pages(pages) for pages in chunks_pages
-        ]
-        if not timeseries_data_chunked or None in timeseries_data_chunked:
-            return None
-
-        timeseries_data = reduce(lambda x, y: x.merge(y), timeseries_data_chunked)
-
-        return timeseries_data.to_user_model(
-            start=start,
-            end=end,
-            variables=variables,
-        )
+        return self._get_timeseries(start, end, variables)
 
     def get_timeseries_with_resampling(
         self,
@@ -259,63 +332,7 @@ class EnlyzeClient:
             request
 
         """  # noqa: E501
-        variables_sequence = []
-        variables_query_parameter_list = []
-        for variable, resampling_method in variables.items():
-            variables_sequence.append(variable)
-            variables_query_parameter_list.append(
-                f"{variable.uuid}"
-                f"{VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR}"
-                f"{resampling_method.value}"
-            )
-
-            validate_resampling_method_for_data_type(
-                resampling_method, variable.data_type
-            )
-
-        start, end, machine_uuid = validate_timeseries_arguments(
-            start,
-            end,
-            variables_sequence,
-        )
-        validate_resampling_interval(resampling_interval)
-
-        try:
-            chunks = chunk(
-                variables_query_parameter_list,
-                MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST,
-            )
-        except ValueError as e:
-            raise EnlyzeError from e
-
-        chunks_pages = (
-            self._timeseries_api_client.get_paginated(
-                "timeseries",
-                timeseries_api_models.TimeseriesData,
-                params={
-                    "appliance": machine_uuid,
-                    "start_datetime": start.isoformat(),
-                    "end_datetime": end.isoformat(),
-                    "variables": ",".join(chunk),
-                    "resampling_interval": resampling_interval,
-                },
-            )
-            for chunk in chunks
-        )
-
-        timeseries_data_chunked = [
-            _get_timeseries_data_from_pages(pages) for pages in chunks_pages
-        ]
-        if not timeseries_data_chunked or None in timeseries_data_chunked:
-            return None
-
-        timeseries_data = reduce(lambda x, y: x.merge(y), timeseries_data_chunked)
-
-        return timeseries_data.to_user_model(
-            start=start,
-            end=end,
-            variables=variables_sequence,
-        )
+        return self._get_timeseries(start, end, variables, resampling_interval)
 
     def _get_production_runs(
         self,
