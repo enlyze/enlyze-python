@@ -391,6 +391,80 @@ def test_get_timeseries_raises_api_returned_no_timestamps(
 
 
 @given(
+    variable=st.builds(user_models.Variable),
+)
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test__get_timeseries_raises_variables_without_resampling_method(
+    start_datetime, end_datetime, variable
+):
+    """
+    Test that `get_timeseries` will raise an `EnlyzeError` when a
+    `resampling_interval` is specified but variables don't have
+    resampling methods.
+    """
+    client = make_client()
+    with pytest.raises(EnlyzeError) as exc_info:
+        client._get_timeseries(start_datetime, end_datetime, [variable], 30)
+    assert isinstance(exc_info.value.__cause__, ValueError)
+
+
+@given(
+    variable=st.builds(user_models.Variable),
+)
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test__get_timeseries_raises_on_chunk_value_error(
+    start_datetime, end_datetime, variable, monkeypatch
+):
+    monkeypatch.setattr(
+        "enlyze.client.MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST", 0
+    )
+    client = make_client()
+    with pytest.raises(EnlyzeError) as exc_info:
+        client._get_timeseries(start_datetime, end_datetime, [variable])
+    assert isinstance(exc_info.value.__cause__, ValueError)
+
+
+@given(
+    start=datetime_before_today_strategy,
+    end=datetime_today_until_now_strategy,
+    variable=st.builds(
+        user_models.Variable,
+        data_type=st.just("INTEGER"),
+        machine=st.builds(timeseries_api_models.Machine),
+    ),
+    records=st.lists(
+        st.tuples(
+            datetime_today_until_now_strategy.map(datetime.isoformat),
+            st.integers(),
+        ),
+        min_size=2,
+    ),
+)
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test__get_timeseries_raises_on_merge_value_error(
+    start, end, variable, records, monkeypatch
+):
+    client = make_client()
+
+    def f(*args, **kwargs):
+        raise ValueError
+
+    monkeypatch.setattr("enlyze.client.reduce", f)
+
+    with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
+        mock.get("timeseries").mock(
+            PaginatedTimeseriesApiResponse(
+                data=timeseries_api_models.TimeseriesData(
+                    columns=["time", str(variable.uuid)],
+                    records=records,
+                ).model_dump()
+            )
+        )
+        with pytest.raises(EnlyzeError):
+            client._get_timeseries(start, end, [variable])
+
+
+@given(
     production_order=st.just(PRODUCTION_ORDER),
     product=st.one_of(
         st.builds(user_models.Product, code=st.just(PRODUCT_CODE)),

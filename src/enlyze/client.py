@@ -59,7 +59,7 @@ def _get_variables_sequence_and_query_parameter_list(
         validate_resampling_interval(resampling_interval)
         variables_sequence = []
         variables_query_parameter_list = []
-        for variable, resampling_method in variables.items():
+        for variable, resampling_method in variables.items():  # type: ignore
             variables_sequence.append(variable)
             variables_query_parameter_list.append(
                 f"{variable.uuid}"
@@ -72,7 +72,7 @@ def _get_variables_sequence_and_query_parameter_list(
             )
         return variables_sequence, variables_query_parameter_list
 
-    return variables, [str(v.uuid) for v in variables]
+    return variables, [str(v.uuid) for v in variables]  # type: ignore
 
 
 class EnlyzeClient:
@@ -254,9 +254,12 @@ class EnlyzeClient:
         if not timeseries_data_chunked or None in timeseries_data_chunked:
             return None
 
-        timeseries_data = reduce(lambda x, y: x.merge(y), timeseries_data_chunked)
+        try:
+            timeseries_data = reduce(lambda x, y: x.merge(y), timeseries_data_chunked)  # type: ignore # noqa
+        except ValueError as e:
+            raise EnlyzeError from e
 
-        return timeseries_data.to_user_model(
+        return timeseries_data.to_user_model(  # type: ignore
             start=start,
             end=end,
             variables=variables_sequence,

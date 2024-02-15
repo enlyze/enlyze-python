@@ -84,7 +84,7 @@ class TimeseriesData(TimeseriesApiModel):
                 f" with {slen} records."
             )
 
-        self.columns.extend(other.columns)
+        self.columns.extend(other.columns[1:])
 
         for s, o in zip(self.records, other.records):
             if s[0] != o[0]:
