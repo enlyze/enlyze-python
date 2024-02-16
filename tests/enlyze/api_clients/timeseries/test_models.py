@@ -63,7 +63,7 @@ class TestTimeseriesData:
         )
 
         for r in merged.records:
-            assert len(r) == expected_merged_record_len
+            assert len(r) == expected_merged_record_len == len(merged.columns)
 
     def test_merge_raises_number_of_records_mismatch(
         self, timeseries_data_1, timeseries_data_2
