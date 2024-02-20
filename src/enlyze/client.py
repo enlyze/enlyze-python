@@ -24,7 +24,6 @@ from enlyze.validators import (
     validate_timeseries_arguments,
 )
 
-
 FETCHING_TIMESERIES_DATA_ERROR_MSG = "Error occurred when fetching timeseries data."
 
 
