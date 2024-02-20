@@ -26,7 +26,7 @@ from enlyze.constants import (
     PRODUCTION_RUNS_API_SUB_PATH,
     TIMESERIES_API_SUB_PATH,
 )
-from enlyze.errors import EnlyzeError
+from enlyze.errors import EnlyzeError, ResamplingValidationError
 from tests.conftest import (
     datetime_before_today_strategy,
     datetime_today_until_now_strategy,
@@ -403,9 +403,8 @@ def test__get_timeseries_raises_variables_without_resampling_method(
     resampling methods.
     """
     client = make_client()
-    with pytest.raises(EnlyzeError) as exc_info:
+    with pytest.raises(ResamplingValidationError):
         client._get_timeseries(start_datetime, end_datetime, [variable], 30)
-    assert isinstance(exc_info.value.__cause__, ValueError)
 
 
 @given(
