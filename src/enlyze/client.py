@@ -55,7 +55,9 @@ def _get_variables_sequence_and_query_parameter_list(
     resampling_interval: Optional[int],
 ) -> Tuple[Sequence[user_models.Variable], Sequence[str]]:
     if isinstance(variables, abc.Sequence) and resampling_interval is not None:
-        raise ResamplingValidationError("`variables` must be a mapping {variable: ResamplingMethod}")
+        raise ResamplingValidationError(
+            "`variables` must be a mapping {variable: ResamplingMethod}"
+        )
 
     if resampling_interval:
         validate_resampling_interval(resampling_interval)
