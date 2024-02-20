@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 from typing import Any, Optional
 from uuid import UUID
 
+from pydantic import Field
+
 import enlyze.models as user_models
 from enlyze.api_clients.base import ApiBaseModel
 
@@ -66,7 +68,7 @@ class Machine(ApiBaseModel):
 
 class ProductionRun(ProductionRunsApiModel):
     uuid: UUID
-    machine: Machine
+    machine: Machine = Field(alias="appliance")
     average_throughput: Optional[float]
     production_order: str
     product: Product
