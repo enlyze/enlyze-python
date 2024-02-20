@@ -25,6 +25,9 @@ from enlyze.validators import (
 )
 
 
+FETCHING_TIMESERIES_DATA_ERROR_MSG = "Error occurred when fetching timeseries data."
+
+
 def _get_timeseries_data_from_pages(
     pages: Iterator[timeseries_api_models.TimeseriesData],
 ) -> Optional[timeseries_api_models.TimeseriesData]:
@@ -53,7 +56,7 @@ def _get_variables_sequence_and_query_parameter_list(
     resampling_interval: Optional[int],
 ) -> Tuple[Sequence[user_models.Variable], Sequence[str]]:
     if isinstance(variables, abc.Sequence) and resampling_interval is not None:
-        raise ValueError("`variables` must be a mapping {variable: ResamplingMethod}")
+        raise EnlyzeError("`variables` must be a mapping {variable: ResamplingMethod}")
 
     if resampling_interval:
         validate_resampling_interval(resampling_interval)
@@ -216,14 +219,11 @@ class EnlyzeClient:
         ],
         resampling_interval: Optional[int] = None,
     ) -> Optional[user_models.TimeseriesData]:
-        try:
-            variables_sequence, variables_query_parameter_list = (
-                _get_variables_sequence_and_query_parameter_list(
-                    variables, resampling_interval
-                )
+        variables_sequence, variables_query_parameter_list = (
+            _get_variables_sequence_and_query_parameter_list(
+                variables, resampling_interval
             )
-        except ValueError as e:
-            raise EnlyzeError from e
+        )
 
         start, end, machine_uuid = validate_timeseries_arguments(
             start, end, variables_sequence
@@ -235,7 +235,7 @@ class EnlyzeClient:
                 MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST,
             )
         except ValueError as e:
-            raise EnlyzeError from e
+            raise EnlyzeError(FETCHING_TIMESERIES_DATA_ERROR_MSG) from e
 
         chunks_pages = (
             self._get_paginated_timeseries(
@@ -257,7 +257,7 @@ class EnlyzeClient:
         try:
             timeseries_data = reduce(lambda x, y: x.merge(y), timeseries_data_chunked)  # type: ignore # noqa
         except ValueError as e:
-            raise EnlyzeError from e
+            raise EnlyzeError(FETCHING_TIMESERIES_DATA_ERROR_MSG) from e
 
         return timeseries_data.to_user_model(  # type: ignore
             start=start,
