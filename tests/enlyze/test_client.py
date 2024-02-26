@@ -23,6 +23,7 @@ from enlyze.api_clients.timeseries.client import (
 from enlyze.client import EnlyzeClient
 from enlyze.constants import (
     ENLYZE_BASE_URL,
+    MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST,
     PRODUCTION_RUNS_API_SUB_PATH,
     TIMESERIES_API_SUB_PATH,
 )
@@ -34,7 +35,7 @@ from tests.conftest import (
 
 MOCK_RESPONSE_HEADERS = {"Content-Type": "application/json"}
 
-APPLIANCE_UUID = "ebef7e5a-5921-4cf3-9a52-7ff0e98e8306"
+MACHINE_UUID = "ebef7e5a-5921-4cf3-9a52-7ff0e98e8306"
 PRODUCT_CODE = "product-code"
 PRODUCTION_ORDER = "production-order"
 SITE_ID = 1
@@ -62,7 +63,7 @@ production_runs_strategy = st.lists(
         start=datetime_before_today_strategy,
         end=datetime_today_until_now_strategy,
         machine=st.builds(
-            production_runs_api_models.Machine, uuid=st.just(APPLIANCE_UUID)
+            production_runs_api_models.Machine, uuid=st.just(MACHINE_UUID)
         ),
         product=st.builds(
             production_runs_api_models.Product,
@@ -335,6 +336,74 @@ def test_get_timeseries_returns_none_on_empty_response(
             )
 
 
+@given(
+    data_strategy=st.data(),
+    records=st.lists(
+        st.tuples(
+            datetime_today_until_now_strategy.map(datetime.isoformat),
+            st.integers(),
+        ),
+        min_size=2,
+        max_size=5,
+    ),
+    machine=st.builds(timeseries_api_models.Machine, uuid=st.just(MACHINE_UUID)),
+)
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test__get_timeseries_raises_on_mixed_response(
+    data_strategy,
+    start_datetime,
+    end_datetime,
+    records,
+    machine,
+):
+    """
+    Tests that an `EnlyzeError` is raised if the timeseries API returns
+    data for some of the variables but not all of them.
+    """
+    client = make_client()
+    variables = data_strategy.draw(
+        st.lists(
+            st.builds(
+                user_models.Variable,
+                data_type=st.just("INTEGER"),
+                machine=st.just(machine),
+            ),
+            min_size=MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST + 1,
+            max_size=MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST + 5,
+        )
+    )
+
+    with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
+        mock.get("timeseries").mock(
+            side_effect=[
+                PaginatedTimeseriesApiResponse(
+                    data=timeseries_api_models.TimeseriesData(
+                        columns=[
+                            "time",
+                            *[
+                                str(variable.uuid)
+                                for variable in variables[
+                                    :MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST
+                                ]
+                            ],
+                        ],
+                        records=records,
+                    ).model_dump(),
+                ),
+                PaginatedTimeseriesApiResponse(
+                    data=timeseries_api_models.TimeseriesData(
+                        columns=[],
+                        records=[],
+                    ).model_dump(),
+                ),
+            ]
+        )
+        with pytest.raises(
+            EnlyzeError, match="didn't return data for some of the variables"
+        ):
+            client._get_timeseries(start_datetime, end_datetime, variables)
+
+
 def test_get_timeseries_raises_no_variables(start_datetime, end_datetime):
     client = make_client()
     with pytest.raises(EnlyzeError, match="at least one variable"):
@@ -472,7 +541,7 @@ def test__get_timeseries_raises_on_merge_value_error(
     machine=st.builds(
         timeseries_api_models.Machine,
         site=st.just(SITE_ID),
-        uuid=st.just(APPLIANCE_UUID),
+        uuid=st.just(MACHINE_UUID),
     ),
     site=st.builds(timeseries_api_models.Site, id=st.just(SITE_ID)),
     start=st.one_of(datetime_before_today_strategy, st.none()),

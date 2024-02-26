@@ -252,8 +252,18 @@ class EnlyzeClient:
         timeseries_data_chunked = [
             _get_timeseries_data_from_pages(pages) for pages in chunks_pages
         ]
-        if not timeseries_data_chunked or None in timeseries_data_chunked:
+
+        if not timeseries_data_chunked or all(
+            data is None for data in timeseries_data_chunked
+        ):
             return None
+
+        if any(data is None for data in timeseries_data_chunked) and any(
+            data is not None for data in timeseries_data_chunked
+        ):
+            raise EnlyzeError(
+                "The timeseries API didn't return data for some of the variables."
+            )
 
         try:
             timeseries_data = reduce(lambda x, y: x.merge(y), timeseries_data_chunked)  # type: ignore # noqa
