@@ -9,7 +9,7 @@ PRODUCTION_RUNS_API_SUB_PATH = "api/production-runs/v1/"
 
 #: HTTP timeout for requests to the Timeseries API.
 #:
-#: Reference: https://www.python-httpx.org/advanced/#timeout-configuration
+#: Reference: https://www.python-httpx.org/advanced/timeouts/
 HTTPX_TIMEOUT = 30.0
 
 #: The separator to use when to separate the variable UUID and the resampling method
