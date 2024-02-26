@@ -62,7 +62,7 @@ production_runs_strategy = st.lists(
         uuid=st.uuids(),
         start=datetime_before_today_strategy,
         end=datetime_today_until_now_strategy,
-        machine=st.builds(
+        appliance=st.builds(
             production_runs_api_models.Machine, uuid=st.just(MACHINE_UUID)
         ),
         product=st.builds(
