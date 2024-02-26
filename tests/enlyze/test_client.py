@@ -577,7 +577,7 @@ def test_get_production_runs(
         )
         production_runs_api_mock.get("production-runs").mock(
             PaginatedProductionRunsApiResponse(
-                data=[p.model_dump() for p in production_runs]
+                data=[p.model_dump(by_alias=True) for p in production_runs]
             )
         )
 
