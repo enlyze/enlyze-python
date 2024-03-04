@@ -75,6 +75,28 @@ class TimeseriesData(TimeseriesApiModel):
         """Add records from ``other`` after the existing records."""
         self.records.extend(other.records)
 
+    def merge(self, other: "TimeseriesData") -> "TimeseriesData":
+        """Merge records from ``other`` into the existing records."""
+        if not (slen := len(self.records)) == (olen := len(other.records)):
+            raise ValueError(
+                "Cannot merge. Number of records in both instances has to be the same,"
+                f" trying to merge an instance with {olen} records into an instance"
+                f" with {slen} records."
+            )
+
+        self.columns.extend(other.columns[1:])
+
+        for s, o in zip(self.records, other.records):
+            if s[0] != o[0]:
+                raise ValueError(
+                    "Cannot merge. Attempted to merge records "
+                    f"with mismatched timestamps {s[0]}, {o[0]}"
+                )
+
+            s.extend(o[1:])
+
+        return self
+
     def to_user_model(
         self,
         start: datetime,
