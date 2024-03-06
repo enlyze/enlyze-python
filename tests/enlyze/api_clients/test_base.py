@@ -7,11 +7,15 @@ import respx
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
+from enlyze._version import VERSION
 from enlyze.api_clients.base import (
+    USER_AGENT_NAME_VERSION_SEPARATOR,
     ApiBaseClient,
     ApiBaseModel,
     PaginatedResponseBaseModel,
+    _construct_user_agent,
 )
+from enlyze.constants import USER_AGENT
 from enlyze.errors import EnlyzeError, InvalidTokenError
 
 
@@ -81,6 +85,46 @@ def base_client(auth_token, string_model, base_url):
         )
         client.PaginatedResponseModel = PaginatedResponseModel
         yield client
+
+
+@pytest.fixture
+def custom_user_agent():
+    return "custom-user-agent"
+
+
+@pytest.fixture
+def custom_user_agent_version():
+    return "3.4.5"
+
+
+class TestConstructUserAgent:
+    def test__construct_user_agent_with_defaults(self):
+        ua, version = _construct_user_agent().split(USER_AGENT_NAME_VERSION_SEPARATOR)
+        assert ua == USER_AGENT
+        assert version == VERSION
+
+    def test__construct_user_agent_custom_agent(self, custom_user_agent):
+        ua, version = _construct_user_agent(user_agent=custom_user_agent).split(
+            USER_AGENT_NAME_VERSION_SEPARATOR
+        )
+        assert ua == custom_user_agent
+        assert version == VERSION
+
+    def test__construct_user_agent_custom_version(self, custom_user_agent_version):
+        ua, version = _construct_user_agent(version=custom_user_agent_version).split(
+            USER_AGENT_NAME_VERSION_SEPARATOR
+        )
+        assert ua == USER_AGENT
+        assert version == custom_user_agent_version
+
+    def test__construct_user_agent_custom_agent_and_version(
+        self, custom_user_agent, custom_user_agent_version
+    ):
+        ua, version = _construct_user_agent(
+            user_agent=custom_user_agent, version=custom_user_agent_version
+        ).split(USER_AGENT_NAME_VERSION_SEPARATOR)
+        assert ua == custom_user_agent
+        assert version == custom_user_agent_version
 
 
 @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])

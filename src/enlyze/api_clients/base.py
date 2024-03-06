@@ -8,9 +8,19 @@ from typing import Any, Generic, TypeVar
 import httpx
 from pydantic import BaseModel, ValidationError
 
+from enlyze._version import VERSION
 from enlyze.auth import TokenAuth
-from enlyze.constants import HTTPX_TIMEOUT
+from enlyze.constants import HTTPX_TIMEOUT, USER_AGENT
 from enlyze.errors import EnlyzeError, InvalidTokenError
+
+USER_AGENT_NAME_VERSION_SEPARATOR = "/"
+
+
+@cache
+def _construct_user_agent(
+    *, user_agent: str = USER_AGENT, version: str = VERSION
+) -> str:
+    return f"{user_agent}{USER_AGENT_NAME_VERSION_SEPARATOR}{version}"
 
 
 class ApiBaseModel(BaseModel):
@@ -60,6 +70,7 @@ class ApiBaseClient(ABC, Generic[R]):
             auth=TokenAuth(token),
             base_url=httpx.URL(base_url),
             timeout=timeout,
+            headers={"user-agent": _construct_user_agent()},
         )
 
     @cache
