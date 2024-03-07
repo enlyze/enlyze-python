@@ -22,3 +22,6 @@ MINIMUM_RESAMPLING_INTERVAL = 10
 #: The maximum number of variables that can be used in a single request when querying
 #: timeseries data.
 MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST = 100
+
+#: The user agent that the SDK identifies itself as when making HTTP requests
+USER_AGENT = "enlyze-python"
