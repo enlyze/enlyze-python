@@ -77,16 +77,19 @@ class TimeseriesData(TimeseriesApiModel):
 
     def merge(self, other: "TimeseriesData") -> "TimeseriesData":
         """Merge records from ``other`` into the existing records."""
-        if not (slen := len(self.records)) == (olen := len(other.records)):
+        slen, olen = len(self.records), len(other.records)
+        if olen < slen:
             raise ValueError(
-                "Cannot merge. Number of records in both instances has to be the same,"
-                f" trying to merge an instance with {olen} records into an instance"
-                f" with {slen} records."
+                "Cannot merge. Attempted to merge"
+                f" an instance with {olen} records into an instance with {slen}"
+                " records. The instance to merge must have a number"
+                " of records greater than or equal to the number of records of"
+                " the instance you're trying to merge into."
             )
 
         self.columns.extend(other.columns[1:])
 
-        for s, o in zip(self.records, other.records):
+        for s, o in zip(self.records, other.records[:slen]):
             if s[0] != o[0]:
                 raise ValueError(
                     "Cannot merge. Attempted to merge records "
