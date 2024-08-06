@@ -1,66 +1,53 @@
+import itertools
+import random
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from enlyze.api_clients.timeseries.models import TimeseriesData
 
-# We use this to skip  columns that contain the timestamp assuming
+# We use this to skip columns that contain the timestamp assuming
 # it starts at the beginning of the sequence. We also use it
 # when computing lengths to account for a timestamp column.
 TIMESTAMP_OFFSET = 1
+NOW = datetime.now(tz=timezone.utc)
 
 
-@pytest.fixture
-def timestamp():
-    return datetime.now(tz=timezone.utc)
+def _generate_timeseries_data(*, columns, number_of_records):
+    timeseries_columns = ["time"]
+    timeseries_columns.extend(columns)
 
+    counter = itertools.count(start=10)
 
-@pytest.fixture
-def timeseries_data_1(timestamp):
     return TimeseriesData(
-        columns=["time", "var1", "var2"],
+        columns=timeseries_columns,
         records=[
-            [timestamp.isoformat(), 1, 2],
-            [(timestamp - timedelta(minutes=10)).isoformat(), 3, 4],
-        ],
-    )
-
-
-@pytest.fixture
-def timeseries_data_2(timestamp):
-    return TimeseriesData(
-        columns=["time", "var3"],
-        records=[
-            [timestamp.isoformat(), 5],
-            [(timestamp - timedelta(minutes=10)).isoformat(), 6],
-        ],
-    )
-
-
-@pytest.fixture
-def timeseries_data_3(timestamp):
-    return TimeseriesData(
-        columns=["time", "var3"],
-        records=[
-            [timestamp.isoformat(), 5],
-            [(timestamp - timedelta(minutes=10)).isoformat(), 6],
-            [(timestamp - timedelta(minutes=10)).isoformat(), 7],
-            [(timestamp - timedelta(minutes=10)).isoformat(), 8],
+            [
+                (NOW - timedelta(minutes=next(counter))).isoformat(),
+                *[random.randint(1, 100) for _ in range(len(columns))],
+            ]
+            for _ in range(number_of_records)
         ],
     )
 
 
 class TestTimeseriesData:
     @pytest.mark.parametrize(
-        "data_fixture,data_to_merge_fixture",
+        "data_parameters,data_to_merge_parameters",
         [
-            ("timeseries_data_1", "timeseries_data_2"),
-            ("timeseries_data_1", "timeseries_data_3"),
+            (
+                {"columns": ["var1", "var2"], "number_of_records": 1},
+                {"columns": ["var3"], "number_of_records": 1},
+            ),
+            (
+                {"columns": ["var1", "var2"], "number_of_records": 1},
+                {"columns": ["var3"], "number_of_records": 3},
+            ),
         ],
     )
-    def test_merge(self, request, data_fixture, data_to_merge_fixture):
-        data = request.getfixturevalue(data_fixture)
-        data_to_merge = request.getfixturevalue(data_to_merge_fixture)
+    def test_merge(self, data_parameters, data_to_merge_parameters):
+        data = _generate_timeseries_data(**data_parameters)
+        data_to_merge = _generate_timeseries_data(**data_to_merge_parameters)
         data_records_len = len(data.records)
         data_columns_len = len(data.columns)
         data_to_merge_columns_len = len(data_to_merge.columns)
@@ -80,10 +67,21 @@ class TestTimeseriesData:
         for r in merged.records:
             assert len(r) == expected_merged_record_len == len(merged.columns)
 
+    @pytest.mark.parametrize(
+        "data_parameters,data_to_merge_parameters",
+        [
+            (
+                {"columns": ["var1", "var2"], "number_of_records": 2},
+                {"columns": ["var3"], "number_of_records": 1},
+            ),
+        ],
+    )
     def test_merge_raises_number_of_records_to_merge_less_than_existing(
-        self, timeseries_data_1, timeseries_data_2
+        self, data_parameters, data_to_merge_parameters
     ):
-        timeseries_data_2.records = timeseries_data_2.records[1:]
+        data = _generate_timeseries_data(**data_parameters)
+        data_to_merge = _generate_timeseries_data(**data_to_merge_parameters)
+
         with pytest.raises(
             ValueError,
             match=(
@@ -92,12 +90,24 @@ class TestTimeseriesData:
                 " of records of the instance you're trying to merge into."
             ),
         ):
-            timeseries_data_1.merge(timeseries_data_2)
+            data.merge(data_to_merge)
 
+    @pytest.mark.parametrize(
+        "data_parameters,data_to_merge_parameters",
+        [
+            (
+                {"columns": ["var1", "var2"], "number_of_records": 1},
+                {"columns": ["var3"], "number_of_records": 1},
+            ),
+        ],
+    )
     def test_merge_raises_mismatched_timestamps(
-        self, timeseries_data_1, timeseries_data_2, timestamp
+        self, data_parameters, data_to_merge_parameters
     ):
-        timeseries_data_2.records[0][0] = (timestamp - timedelta(days=1)).isoformat()
+        data = _generate_timeseries_data(**data_parameters)
+        data_to_merge = _generate_timeseries_data(**data_to_merge_parameters)
+
+        data_to_merge.records[0][0] = (NOW - timedelta(days=1)).isoformat()
 
         with pytest.raises(ValueError, match="mismatched timestamps"):
-            timeseries_data_1.merge(timeseries_data_2)
+            data.merge(data_to_merge)
