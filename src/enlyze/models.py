@@ -205,7 +205,7 @@ class TimeseriesData:
 class OEEComponent:
     """Individual Overall Equipment Effectiveness (OEE) score
 
-    This is calculated by the ENLYZE Platform based on a combination of real machine
+    This is calculated by the ENLYZE platform based on a combination of real machine
     data and production order booking information provided by the customer.
 
     For more information, please check out https://www.oee.com
