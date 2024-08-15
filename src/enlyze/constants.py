@@ -1,6 +1,9 @@
 #: Base URL of the ENLYZE platform.
 ENLYZE_BASE_URL = "https://app.enlyze.com"
 
+#: URL sub-path of the ENLYZE platform API.
+PLATFORM_API_SUB_PATH = "api/v2/"
+
 #: URL sub-path where the Timeseries API is deployed on the ENLYZE platform.
 TIMESERIES_API_SUB_PATH = "api/timeseries/v1/"
 
