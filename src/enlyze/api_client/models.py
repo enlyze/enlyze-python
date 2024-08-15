@@ -18,7 +18,7 @@ class PlatformApiModel(BaseModel):
 
 
 class Site(PlatformApiModel):
-    id: int
+    uuid: UUID
     name: str
     address: str
 
@@ -26,7 +26,7 @@ class Site(PlatformApiModel):
         """Convert into a :ref:`user model <user_models>`"""
 
         return user_models.Site(
-            _id=self.id,
+            uuid=self.uuid,
             address=self.address,
             display_name=self.name,
         )
@@ -39,7 +39,7 @@ class MachineBase(PlatformApiModel):
 
 class Machine(MachineBase):
     genesis_date: date
-    site: int
+    site: UUID
 
     def to_user_model(self, site: user_models.Site) -> user_models.Machine:
         """Convert into a :ref:`user model <user_models>`"""

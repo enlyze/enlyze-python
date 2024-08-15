@@ -18,7 +18,7 @@ class Site:
 
     """
 
-    _id: int
+    uuid: UUID
 
     #: Display name of the site.
     display_name: str
