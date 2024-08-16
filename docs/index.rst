@@ -20,4 +20,4 @@ User's Guide
     models
     errors
     constants
-    api_clients/index
+    api_client/index

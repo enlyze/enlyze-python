@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import hypothesis
 import pytest
@@ -31,7 +31,9 @@ datetime_today_until_now_strategy = st.datetimes(
 )
 
 datetime_before_today_strategy = st.datetimes(
-    max_value=datetime.now().replace(hour=0),
+    max_value=(datetime.now() - timedelta(days=1)).replace(
+        hour=23, minute=59, second=59
+    ),
     min_value=datetime(1970, 1, 1, 12, 0, 0),
     timezones=st.just(timezone.utc),
 )
