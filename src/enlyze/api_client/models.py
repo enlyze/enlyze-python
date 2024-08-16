@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 from typing import Any, Optional, Sequence
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 import enlyze.models as user_models
 

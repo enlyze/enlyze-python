@@ -4,11 +4,9 @@ from functools import cache, reduce
 from typing import Any, Iterator, Mapping, Optional, Sequence, Tuple, Union
 from uuid import UUID
 
-import enlyze.api_clients.timeseries.models as timeseries_api_models
+import enlyze.api_client.models as platform_api_models
 import enlyze.models as user_models
-from enlyze.api_clients.production_runs.client import ProductionRunsApiClient
-from enlyze.api_clients.production_runs.models import ProductionRun
-from enlyze.api_clients.timeseries.client import TimeseriesApiClient
+from enlyze.api_client.client import PlatformApiClient
 from enlyze.constants import (
     ENLYZE_BASE_URL,
     MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST,
@@ -28,8 +26,8 @@ FETCHING_TIMESERIES_DATA_ERROR_MSG = "Error occurred when fetching timeseries da
 
 
 def _get_timeseries_data_from_pages(
-    pages: Iterator[timeseries_api_models.TimeseriesData],
-) -> Optional[timeseries_api_models.TimeseriesData]:
+    pages: Iterator[platform_api_models.TimeseriesData],
+) -> Optional[platform_api_models.TimeseriesData]:
     try:
         timeseries_data = next(pages)
     except StopIteration:
@@ -90,19 +88,14 @@ class EnlyzeClient:
     """
 
     def __init__(self, token: str, *, _base_url: str | None = None) -> None:
-        self._timeseries_api_client = TimeseriesApiClient(
-            token=token,
-            base_url=_base_url or ENLYZE_BASE_URL,
-        )
-        self._production_runs_api_client = ProductionRunsApiClient(
-            token=token,
-            base_url=_base_url or ENLYZE_BASE_URL,
+        self._platform_api_client = PlatformApiClient(
+            token=token, base_url=_base_url or ENLYZE_BASE_URL
         )
 
-    def _get_sites(self) -> Iterator[timeseries_api_models.Site]:
+    def _get_sites(self) -> Iterator[platform_api_models.Site]:
         """Get all sites from the API"""
-        return self._timeseries_api_client.get_paginated(
-            "sites", timeseries_api_models.Site
+        return self._platform_api_client.get_paginated(
+            "sites", platform_api_models.Site
         )
 
     @cache
@@ -119,10 +112,10 @@ class EnlyzeClient:
         """
         return [site.to_user_model() for site in self._get_sites()]
 
-    def _get_machines(self) -> Iterator[timeseries_api_models.Machine]:
+    def _get_machines(self) -> Iterator[platform_api_models.Machine]:
         """Get all machines from the API"""
-        return self._timeseries_api_client.get_paginated(
-            "appliances", timeseries_api_models.Machine
+        return self._platform_api_client.get_paginated(
+            "machines", platform_api_models.Machine
         )
 
     @cache
@@ -144,13 +137,13 @@ class EnlyzeClient:
         """
 
         if site:
-            sites_by_id = {site._id: site}
+            sites_by_uuid = {site.uuid: site}
         else:
-            sites_by_id = {site._id: site for site in self.get_sites()}
+            sites_by_uuid = {site.uuid: site for site in self.get_sites()}
 
         machines = []
         for machine_api in self._get_machines():
-            site_ = sites_by_id.get(machine_api.site)
+            site_ = sites_by_uuid.get(machine_api.site)
             if not site_:
                 continue
 
@@ -160,12 +153,12 @@ class EnlyzeClient:
 
     def _get_variables(
         self, machine_uuid: UUID
-    ) -> Iterator[timeseries_api_models.Variable]:
+    ) -> Iterator[platform_api_models.Variable]:
         """Get variables for a machine from the API."""
-        return self._timeseries_api_client.get_paginated(
+        return self._platform_api_client.get_paginated(
             "variables",
-            timeseries_api_models.Variable,
-            params={"appliance": str(machine_uuid)},
+            platform_api_models.Variable,
+            params={"machine": str(machine_uuid)},
         )
 
     def get_variables(
@@ -195,9 +188,9 @@ class EnlyzeClient:
         end: datetime,
         variables: Sequence[str],
         resampling_interval: Optional[int],
-    ) -> Iterator[timeseries_api_models.TimeseriesData]:
+    ) -> Iterator[platform_api_models.TimeseriesData]:
         params: dict[str, Any] = {
-            "appliance": machine_uuid,
+            "machine": machine_uuid,
             "start_datetime": start.isoformat(),
             "end_datetime": end.isoformat(),
             "variables": ",".join(variables),
@@ -206,8 +199,8 @@ class EnlyzeClient:
         if resampling_interval:
             params["resampling_interval"] = resampling_interval
 
-        return self._timeseries_api_client.get_paginated(
-            "timeseries", timeseries_api_models.TimeseriesData, params=params
+        return self._platform_api_client.get_paginated(
+            "timeseries", platform_api_models.TimeseriesData, params=params
         )
 
     def _get_timeseries(
@@ -356,19 +349,19 @@ class EnlyzeClient:
         machine: Optional[UUID] = None,
         start: Optional[datetime] = None,
         end: Optional[datetime] = None,
-    ) -> Iterator[ProductionRun]:
+    ) -> Iterator[platform_api_models.ProductionRun]:
         """Get production runs from the API."""
 
         filters = {
             "production_order": production_order,
             "product": product,
-            "appliance": machine,
+            "machine": machine,
             "start": start.isoformat() if start else None,
             "end": end.isoformat() if end else None,
         }
         params = {k: v for k, v in filters.items() if v is not None}
-        return self._production_runs_api_client.get_paginated(
-            "production-runs", ProductionRun, params=params
+        return self._platform_api_client.get_paginated(
+            "production-runs", platform_api_models.ProductionRun, params=params
         )
 
     def get_production_runs(
