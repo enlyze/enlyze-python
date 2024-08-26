@@ -4,15 +4,12 @@ requires = [
   "setuptools",
 ]
 
-[tool.setuptools.dynamic]
-version = {attr = "enlyze._version.VERSION"}
-
 [project]
 name = "enlyze"
 description = "Python SDK for interacting with the ENLYZE platform https://www.enlyze.com"
 readme = "README.rst"
-license = {text = "MIT"}
-authors = [{name = "ENLYZE GmbH", email = "hello@enlyze.com"},]
+license = { text = "MIT" }
+authors = [ { name = "ENLYZE GmbH", email = "hello@enlyze.com" } ]
 requires-python = ">=3.10"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
@@ -21,21 +18,20 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
 ]
 dynamic = [
-  'version',
+  "version",
 ]
 dependencies = [
   "httpx",
   "pandas>=2",
   "pydantic>=2",
 ]
-[project.optional-dependencies]
-docs = [
+optional-dependencies.docs = [
   "sphinx",
   "sphinx-rtd-theme",
   "sphinx-tabs",
   "sphinxcontrib-spelling",
 ]
-lint = [
+optional-dependencies.lint = [
   "bandit",
   "black",
   "flake8",
@@ -45,7 +41,7 @@ lint = [
   "safety",
   "tox-ini-fmt",
 ]
-test = [
+optional-dependencies.test = [
   "coverage",
   "hypothesis",
   "pandas-stubs",
@@ -57,8 +53,11 @@ test = [
   "respx",
 ]
 
-[tool.mypy]
-exclude="tests"
+[tool.setuptools.dynamic]
+version = { attr = "enlyze._version.VERSION" }
 
 [tool.isort]
 profile = "black"
+
+[tool.mypy]
+exclude = "tests"

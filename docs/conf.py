@@ -33,7 +33,7 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", ".ipynb_checkpoints"]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -48,6 +48,9 @@ nitpicky = True
 nitpick_ignore_regex = [
     ("py:class", r".*\.T"),
     ("py:.*", r"httpx\..*"),
+]
+nitpick_ignore = [
+    ("py:class", "ComputedFieldInfo"),
 ]
 
 autodoc_default_options = {"exclude-members": "__weakref__, __init__, __new__"}

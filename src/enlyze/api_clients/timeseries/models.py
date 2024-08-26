@@ -32,16 +32,16 @@ class Site(TimeseriesApiModel):
         )
 
 
-class Appliance(TimeseriesApiModel):
+class Machine(TimeseriesApiModel):
     uuid: UUID
     name: str
     genesis_date: date
     site: int
 
-    def to_user_model(self, site: user_models.Site) -> user_models.Appliance:
+    def to_user_model(self, site: user_models.Site) -> user_models.Machine:
         """Convert into a :ref:`user model <user_models>`"""
 
-        return user_models.Appliance(
+        return user_models.Machine(
             uuid=self.uuid,
             display_name=self.name,
             genesis_date=self.genesis_date,
@@ -55,7 +55,7 @@ class Variable(TimeseriesApiModel):
     unit: Optional[str]
     data_type: user_models.VariableDataType
 
-    def to_user_model(self, appliance: user_models.Appliance) -> user_models.Variable:
+    def to_user_model(self, machine: user_models.Machine) -> user_models.Variable:
         """Convert into a :ref:`user model <user_models>`."""
 
         return user_models.Variable(
@@ -63,7 +63,7 @@ class Variable(TimeseriesApiModel):
             display_name=self.display_name,
             unit=self.unit,
             data_type=self.data_type,
-            appliance=appliance,
+            machine=machine,
         )
 
 
@@ -74,6 +74,31 @@ class TimeseriesData(TimeseriesApiModel):
     def extend(self, other: "TimeseriesData") -> None:
         """Add records from ``other`` after the existing records."""
         self.records.extend(other.records)
+
+    def merge(self, other: "TimeseriesData") -> "TimeseriesData":
+        """Merge records from ``other`` into the existing records."""
+        slen, olen = len(self.records), len(other.records)
+        if olen < slen:
+            raise ValueError(
+                "Cannot merge. Attempted to merge"
+                f" an instance with {olen} records into an instance with {slen}"
+                " records. The instance to merge must have a number"
+                " of records greater than or equal to the number of records of"
+                " the instance you're trying to merge into."
+            )
+
+        self.columns.extend(other.columns[1:])
+
+        for s, o in zip(self.records, other.records[:slen]):
+            if s[0] != o[0]:
+                raise ValueError(
+                    "Cannot merge. Attempted to merge records "
+                    f"with mismatched timestamps {s[0]}, {o[0]}"
+                )
+
+            s.extend(o[1:])
+
+        return self
 
     def to_user_model(
         self,

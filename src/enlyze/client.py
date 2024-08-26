@@ -1,6 +1,7 @@
+from collections import abc
 from datetime import datetime
-from functools import cache
-from typing import Iterator, Mapping, Optional, Sequence
+from functools import cache, reduce
+from typing import Any, Iterator, Mapping, Optional, Sequence, Tuple, Union
 from uuid import UUID
 
 import enlyze.api_clients.timeseries.models as timeseries_api_models
@@ -10,9 +11,11 @@ from enlyze.api_clients.production_runs.models import ProductionRun
 from enlyze.api_clients.timeseries.client import TimeseriesApiClient
 from enlyze.constants import (
     ENLYZE_BASE_URL,
+    MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST,
     VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR,
 )
-from enlyze.errors import EnlyzeError
+from enlyze.errors import EnlyzeError, ResamplingValidationError
+from enlyze.iterable_tools import chunk
 from enlyze.validators import (
     validate_datetime,
     validate_resampling_interval,
@@ -20,6 +23,8 @@ from enlyze.validators import (
     validate_start_and_end,
     validate_timeseries_arguments,
 )
+
+FETCHING_TIMESERIES_DATA_ERROR_MSG = "Error occurred when fetching timeseries data."
 
 
 def _get_timeseries_data_from_pages(
@@ -40,6 +45,38 @@ def _get_timeseries_data_from_pages(
         timeseries_data.extend(page)
 
     return timeseries_data
+
+
+def _get_variables_sequence_and_query_parameter_list(
+    variables: Union[
+        Sequence[user_models.Variable],
+        Mapping[user_models.Variable, user_models.ResamplingMethod],
+    ],
+    resampling_interval: Optional[int],
+) -> Tuple[Sequence[user_models.Variable], Sequence[str]]:
+    if isinstance(variables, abc.Sequence) and resampling_interval is not None:
+        raise ResamplingValidationError(
+            "`variables` must be a mapping {variable: ResamplingMethod}"
+        )
+
+    if resampling_interval:
+        validate_resampling_interval(resampling_interval)
+        variables_sequence = []
+        variables_query_parameter_list = []
+        for variable, resampling_method in variables.items():  # type: ignore
+            variables_sequence.append(variable)
+            variables_query_parameter_list.append(
+                f"{variable.uuid}"
+                f"{VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR}"
+                f"{resampling_method.value}"
+            )
+
+            validate_resampling_method_for_data_type(
+                resampling_method, variable.data_type
+            )
+        return variables_sequence, variables_query_parameter_list
+
+    return variables, [str(v.uuid) for v in variables]  # type: ignore
 
 
 class EnlyzeClient:
@@ -82,28 +119,27 @@ class EnlyzeClient:
         """
         return [site.to_user_model() for site in self._get_sites()]
 
-    def _get_appliances(self) -> Iterator[timeseries_api_models.Appliance]:
-        """Get all appliances from the API"""
+    def _get_machines(self) -> Iterator[timeseries_api_models.Machine]:
+        """Get all machines from the API"""
         return self._timeseries_api_client.get_paginated(
-            "appliances", timeseries_api_models.Appliance
+            "appliances", timeseries_api_models.Machine
         )
 
     @cache
-    def get_appliances(
+    def get_machines(
         self, site: Optional[user_models.Site] = None
-    ) -> list[user_models.Appliance]:
-        """Retrieve all :ref:`appliances <appliance>`, optionally filtered by site.
+    ) -> list[user_models.Machine]:
+        """Retrieve all :ref:`machines <machine>`, optionally filtered by site.
 
-        :param site: Only get appliances of this site. Gets all appliances of the
+        :param site: Only get machines of this site. Gets all machines of the
             organization if None.
-        :type site: :class:`~enlyze.models.Site` or None
 
         :raises: |token-error|
 
         :raises: |generic-error|
 
-        :returns: Appliances
-        :rtype: list[:class:`~enlyze.models.Appliance`]
+        :returns: Machines
+        :rtype: list[:class:`~enlyze.models.Machine`]
 
         """
 
@@ -112,45 +148,133 @@ class EnlyzeClient:
         else:
             sites_by_id = {site._id: site for site in self.get_sites()}
 
-        appliances = []
-        for appliance_api in self._get_appliances():
-            site_ = sites_by_id.get(appliance_api.site)
+        machines = []
+        for machine_api in self._get_machines():
+            site_ = sites_by_id.get(machine_api.site)
             if not site_:
                 continue
 
-            appliances.append(appliance_api.to_user_model(site_))
+            machines.append(machine_api.to_user_model(site_))
 
-        return appliances
+        return machines
 
     def _get_variables(
-        self, appliance_uuid: UUID
+        self, machine_uuid: UUID
     ) -> Iterator[timeseries_api_models.Variable]:
-        """Get variables for an appliance from the API."""
+        """Get variables for a machine from the API."""
         return self._timeseries_api_client.get_paginated(
             "variables",
             timeseries_api_models.Variable,
-            params={"appliance": str(appliance_uuid)},
+            params={"appliance": str(machine_uuid)},
         )
 
     def get_variables(
-        self, appliance: user_models.Appliance
+        self, machine: user_models.Machine
     ) -> Sequence[user_models.Variable]:
-        """Retrieve all variables of an :ref:`appliance <appliance>`.
+        """Retrieve all variables of a :ref:`machine <machine>`.
 
-        :param appliance: The appliance for which to get all variables.
-        :type appliance: :class:`~enlyze.models.Appliance`
+        :param machine: The machine for which to get all variables.
 
         :raises: |token-error|
 
         :raises: |generic-error|
 
-        :returns: Variables of ``appliance``
+        :returns: Variables of ``machine``
 
         """
         return [
-            variable.to_user_model(appliance)
-            for variable in self._get_variables(appliance.uuid)
+            variable.to_user_model(machine)
+            for variable in self._get_variables(machine.uuid)
         ]
+
+    def _get_paginated_timeseries(
+        self,
+        *,
+        machine_uuid: str,
+        start: datetime,
+        end: datetime,
+        variables: Sequence[str],
+        resampling_interval: Optional[int],
+    ) -> Iterator[timeseries_api_models.TimeseriesData]:
+        params: dict[str, Any] = {
+            "appliance": machine_uuid,
+            "start_datetime": start.isoformat(),
+            "end_datetime": end.isoformat(),
+            "variables": ",".join(variables),
+        }
+
+        if resampling_interval:
+            params["resampling_interval"] = resampling_interval
+
+        return self._timeseries_api_client.get_paginated(
+            "timeseries", timeseries_api_models.TimeseriesData, params=params
+        )
+
+    def _get_timeseries(
+        self,
+        start: datetime,
+        end: datetime,
+        variables: Union[
+            Sequence[user_models.Variable],
+            Mapping[user_models.Variable, user_models.ResamplingMethod],
+        ],
+        resampling_interval: Optional[int] = None,
+    ) -> Optional[user_models.TimeseriesData]:
+        variables_sequence, variables_query_parameter_list = (
+            _get_variables_sequence_and_query_parameter_list(
+                variables, resampling_interval
+            )
+        )
+
+        start, end, machine_uuid = validate_timeseries_arguments(
+            start, end, variables_sequence
+        )
+
+        try:
+            chunks = chunk(
+                variables_query_parameter_list,
+                MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST,
+            )
+        except ValueError as e:
+            raise EnlyzeError(FETCHING_TIMESERIES_DATA_ERROR_MSG) from e
+
+        chunks_pages = (
+            self._get_paginated_timeseries(
+                machine_uuid=machine_uuid,
+                start=start,
+                end=end,
+                variables=chunk,
+                resampling_interval=resampling_interval,
+            )
+            for chunk in chunks
+        )
+
+        timeseries_data_chunked = [
+            _get_timeseries_data_from_pages(pages) for pages in chunks_pages
+        ]
+
+        if not timeseries_data_chunked or all(
+            data is None for data in timeseries_data_chunked
+        ):
+            return None
+
+        if any(data is None for data in timeseries_data_chunked) and any(
+            data is not None for data in timeseries_data_chunked
+        ):
+            raise EnlyzeError(
+                "The timeseries API didn't return data for some of the variables."
+            )
+
+        try:
+            timeseries_data = reduce(lambda x, y: x.merge(y), timeseries_data_chunked)  # type: ignore # noqa
+        except ValueError as e:
+            raise EnlyzeError(FETCHING_TIMESERIES_DATA_ERROR_MSG) from e
+
+        return timeseries_data.to_user_model(  # type: ignore
+            start=start,
+            end=end,
+            variables=variables_sequence,
+        )
 
     def get_timeseries(
         self,
@@ -161,7 +285,7 @@ class EnlyzeClient:
         """Get timeseries data of :ref:`variables <variable>` for a given time frame.
 
         Timeseries data for multiple variables can be requested at once. However, all
-        variables must belong to the same appliance.
+        variables must belong to the same machine.
 
         You should always pass :ref:`timezone-aware datetime
         <python:datetime-naive-aware>` objects to this method! If you don't, naive
@@ -182,30 +306,7 @@ class EnlyzeClient:
 
         """
 
-        start, end, appliance_uuid = validate_timeseries_arguments(
-            start, end, variables
-        )
-
-        pages = self._timeseries_api_client.get_paginated(
-            "timeseries",
-            timeseries_api_models.TimeseriesData,
-            params={
-                "appliance": appliance_uuid,
-                "start_datetime": start.isoformat(),
-                "end_datetime": end.isoformat(),
-                "variables": ",".join(str(v.uuid) for v in variables),
-            },
-        )
-
-        timeseries_data = _get_timeseries_data_from_pages(pages)
-        if timeseries_data is None:
-            return None
-
-        return timeseries_data.to_user_model(
-            start=start,
-            end=end,
-            variables=variables,
-        )
+        return self._get_timeseries(start, end, variables)
 
     def get_timeseries_with_resampling(
         self,
@@ -217,7 +318,7 @@ class EnlyzeClient:
         """Get resampled timeseries data of :ref:`variables <variable>` for a given time frame.
 
         Timeseries data for multiple variables can be requested at once. However, all
-        variables must belong to the same appliance.
+        variables must belong to the same machine.
 
         You should always pass :ref:`timezone-aware datetime
         <python:datetime-naive-aware>` objects to this method! If you don't, naive
@@ -245,55 +346,14 @@ class EnlyzeClient:
             request
 
         """  # noqa: E501
-        variables_sequence = []
-        variables_query_parameter_list = []
-        for variable, resampling_method in variables.items():
-            variables_sequence.append(variable)
-            variables_query_parameter_list.append(
-                f"{variable.uuid}"
-                f"{VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR}"
-                f"{resampling_method.value}"
-            )
-
-            validate_resampling_method_for_data_type(
-                resampling_method, variable.data_type
-            )
-
-        start, end, appliance_uuid = validate_timeseries_arguments(
-            start,
-            end,
-            variables_sequence,
-        )
-        validate_resampling_interval(resampling_interval)
-
-        pages = self._timeseries_api_client.get_paginated(
-            "timeseries",
-            timeseries_api_models.TimeseriesData,
-            params={
-                "appliance": appliance_uuid,
-                "start_datetime": start.isoformat(),
-                "end_datetime": end.isoformat(),
-                "variables": ",".join(variables_query_parameter_list),
-                "resampling_interval": resampling_interval,
-            },
-        )
-
-        timeseries_data = _get_timeseries_data_from_pages(pages)
-        if timeseries_data is None:
-            return None
-
-        return timeseries_data.to_user_model(
-            start=start,
-            end=end,
-            variables=variables_sequence,
-        )
+        return self._get_timeseries(start, end, variables, resampling_interval)
 
     def _get_production_runs(
         self,
         *,
         production_order: Optional[str] = None,
         product: Optional[str] = None,
-        appliance: Optional[UUID] = None,
+        machine: Optional[UUID] = None,
         start: Optional[datetime] = None,
         end: Optional[datetime] = None,
     ) -> Iterator[ProductionRun]:
@@ -302,7 +362,7 @@ class EnlyzeClient:
         filters = {
             "production_order": production_order,
             "product": product,
-            "appliance": appliance,
+            "appliance": machine,
             "start": start.isoformat() if start else None,
             "end": end.isoformat() if end else None,
         }
@@ -316,13 +376,13 @@ class EnlyzeClient:
         *,
         production_order: Optional[str] = None,
         product: Optional[user_models.Product | str] = None,
-        appliance: Optional[user_models.Appliance] = None,
+        machine: Optional[user_models.Machine] = None,
         start: Optional[datetime] = None,
         end: Optional[datetime] = None,
     ) -> user_models.ProductionRuns:
         """Retrieve optionally filtered list of :ref:`production runs <production_run>`.
 
-        :param appliance: The appliance for which to get all production runs.
+        :param machine: The machine for which to get all production runs.
         :param product: Filter production runs by product.
         :param production_order: Filter production runs by production order.
 
@@ -344,12 +404,12 @@ class EnlyzeClient:
         product_filter = (
             product.code if isinstance(product, user_models.Product) else product
         )
-        appliances_by_uuid = {a.uuid: a for a in self.get_appliances()}
+        machines_by_uuid = {a.uuid: a for a in self.get_machines()}
         return user_models.ProductionRuns(
             [
-                production_run.to_user_model(appliances_by_uuid)
+                production_run.to_user_model(machines_by_uuid)
                 for production_run in self._get_production_runs(
-                    appliance=appliance.uuid if appliance else None,
+                    machine=machine.uuid if machine else None,
                     production_order=production_order,
                     product=product_filter,
                     start=start,

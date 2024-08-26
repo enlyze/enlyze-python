@@ -21,3 +21,4 @@ url
 uuid
 virtualenv
 whitespace
+Jupyter
