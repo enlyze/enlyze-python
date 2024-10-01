@@ -7,6 +7,7 @@ from uuid import UUID
 
 import pandas
 
+from enlyze.errors import DuplicateDisplayNameError
 from enlyze.schema import dataframe_ensure_schema
 
 
@@ -143,6 +144,19 @@ class TimeseriesData:
             if var.display_name
         }
 
+        distinct_display_names = set(uuid_to_display_name.values())
+        if len(uuid_to_display_name) != len(distinct_display_names):
+            maybe_duplicate_display_names = list(uuid_to_display_name.values())
+            for name in distinct_display_names:
+                maybe_duplicate_display_names.remove(name)
+
+            raise DuplicateDisplayNameError(
+                ", ".join(
+                    f"'{duplicate_display_name}'"
+                    for duplicate_display_name in set(maybe_duplicate_display_names)
+                )
+            )
+
         return [uuid_to_display_name.get(var_uuid, var_uuid) for var_uuid in columns]
 
     def to_dicts(self, use_display_names: bool = False) -> Iterator[dict[str, Any]]:
@@ -153,13 +167,11 @@ class TimeseriesData:
         <python:datetime-naive-aware>` :py:class:`datetime.datetime` localized in UTC.
 
         :param use_display_names: Whether to return display names instead of variable
-            UUIDs. If there is no display name, fall back to UUID. Display names aren't
-            guaranteed to be unique, duplicate columns will not be returned.
+            UUIDs. If there is no display name, fall back to UUID.
 
         :returns: Iterator over rows
 
         """
-
         time_column, *variable_columns = self._columns
 
         if use_display_names:
@@ -182,9 +194,7 @@ class TimeseriesData:
         represented as a column named by its UUID.
 
         :param use_display_names: Whether to return display names instead of variable
-            UUIDs. If there is no display name, fall back to UUID. Display names aren't
-            guaranteed to be unique, so the DataFrame may contain multiple columns with
-            the same name.
+            UUIDs. If there is no display name, fall back to UUID.
 
         :returns: DataFrame with timeseries data indexed by time
 

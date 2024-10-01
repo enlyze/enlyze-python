@@ -28,3 +28,11 @@ class ResamplingValidationError(EnlyzeError):
     resampling interval is specified.
 
     """
+
+
+class DuplicateDisplayNameError(EnlyzeError):
+    """Variables with duplicate display names
+
+    Resolving variable UUIDs to display names would result in ambiguity because
+    multiple variables have the same display name.
+    """
