@@ -23,7 +23,6 @@ from enlyze.api_clients.timeseries.client import (
 from enlyze.client import EnlyzeClient
 from enlyze.constants import (
     ENLYZE_BASE_URL,
-    MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST,
     PRODUCTION_RUNS_API_SUB_PATH,
     TIMESERIES_API_SUB_PATH,
 )
@@ -350,6 +349,7 @@ def test_get_timeseries_returns_none_on_empty_response(
 )
 @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
 def test__get_timeseries_raises_on_mixed_response(
+    monkeypatch,
     data_strategy,
     start_datetime,
     end_datetime,
@@ -360,6 +360,14 @@ def test__get_timeseries_raises_on_mixed_response(
     Tests that an `EnlyzeError` is raised if the timeseries API returns
     data for some of the variables but not all of them.
     """
+
+    # patch to lower value to improve test performance
+    max_vars_per_request = 10
+    monkeypatch.setattr(
+        "enlyze.client.MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST",
+        max_vars_per_request,
+    )
+
     client = make_client()
     variables = data_strategy.draw(
         st.lists(
@@ -368,8 +376,8 @@ def test__get_timeseries_raises_on_mixed_response(
                 data_type=st.just("INTEGER"),
                 machine=st.just(machine),
             ),
-            min_size=MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST + 1,
-            max_size=MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST + 5,
+            min_size=max_vars_per_request + 1,
+            max_size=max_vars_per_request + 5,
         )
     )
 
@@ -382,9 +390,7 @@ def test__get_timeseries_raises_on_mixed_response(
                             "time",
                             *[
                                 str(variable.uuid)
-                                for variable in variables[
-                                    :MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST
-                                ]
+                                for variable in variables[:max_vars_per_request]
                             ],
                         ],
                         records=records,
