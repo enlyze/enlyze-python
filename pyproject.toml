@@ -38,7 +38,6 @@ optional-dependencies.lint = [
   "isort",
   "mypy",
   "pyproject-fmt",
-  "safety",
   "tox-ini-fmt",
 ]
 optional-dependencies.test = [
