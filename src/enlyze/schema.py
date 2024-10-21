@@ -1,17 +1,18 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from _typeshed import DataclassInstance
 import typing
 from dataclasses import is_dataclass
 from types import UnionType
-from typing import Any, Protocol
 
 import pandas
 
 
-class DataclassTypeOrInstance(Protocol):
-    __dataclass_fields__: dict[str, Any]
-
-
 def _flat_dataclass_schema(
-    dataclass_obj_or_type: DataclassTypeOrInstance,
+    dataclass_obj_or_type: DataclassInstance | type[DataclassInstance],
     path_separator: str,
     _parent_path: list[str] = [],
 ) -> list[str]:
@@ -42,7 +43,7 @@ def _flat_dataclass_schema(
 
 def dataframe_ensure_schema(
     df: pandas.DataFrame,
-    dataclass_obj_or_type: DataclassTypeOrInstance,
+    dataclass_obj_or_type: DataclassInstance | type[DataclassInstance],
     path_separator: str = ".",
 ) -> pandas.DataFrame:
     """Add missing columns to ``df`` based on flattened dataclass schema"""
