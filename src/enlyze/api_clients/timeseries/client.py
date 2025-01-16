@@ -54,10 +54,10 @@ class TimeseriesApiClient(ApiBaseClient[_PaginatedResponse]):
     def _next_page_call_args(
         self,
         *,
-        url: str,
+        url: str | httpx.URL,
         params: dict[str, Any],
         paginated_response: _PaginatedResponse,
         **kwargs: Any,
-    ) -> Tuple[str, dict[str, Any], dict[str, Any]]:
+    ) -> Tuple[str | httpx.URL, dict[str, Any], dict[str, Any]]:
         next_url = str(paginated_response.next)
         return (next_url, params, kwargs)
