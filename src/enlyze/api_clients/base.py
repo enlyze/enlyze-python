@@ -78,7 +78,7 @@ class ApiBaseClient(ABC, Generic[R]):
         """Construct full URL from relative URL"""
         return str(self._client.build_request("", api_path).url)
 
-    def get(self, api_path: str, **kwargs: Any) -> Any:
+    def get(self, api_path: str | httpx.URL, **kwargs: Any) -> Any:
         """Wraps :meth:`httpx.Client.get` with defensive error handling
 
         :param api_path: Relative URL path inside the API name space (or a full URL)
@@ -146,11 +146,11 @@ class ApiBaseClient(ABC, Generic[R]):
     def _next_page_call_args(
         self,
         *,
-        url: str,
+        url: str | httpx.URL,
         params: dict[str, Any],
         paginated_response: R,
         **kwargs: Any,
-    ) -> tuple[str, dict[str, Any], dict[str, Any]]:
+    ) -> tuple[str | httpx.URL, dict[str, Any], dict[str, Any]]:
         r"""Compute call arguments for the next page.
 
         :param url: The URL used to fetch the current page
@@ -166,7 +166,7 @@ class ApiBaseClient(ABC, Generic[R]):
         """
 
     def get_paginated(
-        self, api_path: str, model: type[M], **kwargs: Any
+        self, api_path: str | httpx.URL, model: type[M], **kwargs: Any
     ) -> Iterator[M]:
         """Retrieve objects from a paginated ENLYZE platform API endpoint via HTTP GET.
 
@@ -196,7 +196,10 @@ class ApiBaseClient(ABC, Generic[R]):
         params = kwargs.pop("params", {})
 
         while True:
-            response_body = self.get(url, params=params, **kwargs)
+            # merge query parameters into URL instead of replacing (ref httpx#3364)
+            url_with_query_params = httpx.URL(url).copy_merge_params(params)
+
+            response_body = self.get(url_with_query_params, **kwargs)
             try:
                 paginated_response = self.PaginatedResponseModel.model_validate(
                     response_body

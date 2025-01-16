@@ -46,10 +46,10 @@ class ProductionRunsApiClient(ApiBaseClient[_PaginatedResponse]):
 
     def _next_page_call_args(
         self,
-        url: str,
+        url: str | httpx.URL,
         params: dict[str, Any],
         paginated_response: _PaginatedResponse,
         **kwargs: Any,
-    ) -> tuple[str, dict[str, Any], dict[str, Any]]:
+    ) -> tuple[str | httpx.URL, dict[str, Any], dict[str, Any]]:
         next_params = {**params, "cursor": paginated_response.metadata.next_cursor}
         return (url, next_params, kwargs)
