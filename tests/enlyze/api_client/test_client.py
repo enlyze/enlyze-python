@@ -279,3 +279,20 @@ def test_get_paginated_multi_page(
     assert route.called
     assert route.call_count == 2
     assert data == expected_data
+
+
+@respx.mock
+def test_get_paginated_raises_on_invalid_data(api_client):
+    class TestModel(PlatformApiModel):
+        my_field: int  # type:ignore
+
+    invalid_data = [{"invalid": "data"}]
+    paginated_response = _PaginatedResponse(
+        data=invalid_data, metadata=_Metadata(next_cursor=None)
+    )
+    route = respx.get("").respond(json=paginated_response.model_dump())
+
+    with pytest.raises(EnlyzeError, match="ENLYZE platform API returned an unparsable"):
+        list(api_client.get_paginated("", TestModel))
+
+    assert route.called
