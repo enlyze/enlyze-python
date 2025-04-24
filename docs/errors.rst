@@ -10,3 +10,6 @@ Errors
 
 .. autoclass:: ResamplingValidationError
     :show-inheritance:
+
+.. autoclass:: DuplicateDisplayNameError
+    :show-inheritance:

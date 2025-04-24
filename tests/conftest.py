@@ -24,16 +24,21 @@ st.register_type_strategy(
     ),
 )
 
+DATETIME_TODAY_MIDNIGHT = datetime.now().replace(
+    hour=0,
+    minute=0,
+    second=0,
+    microsecond=0,
+)
+
 datetime_today_until_now_strategy = st.datetimes(
-    min_value=datetime.now().replace(hour=0),
+    min_value=DATETIME_TODAY_MIDNIGHT,
     max_value=datetime.now(),
     timezones=st.just(timezone.utc),
 )
 
 datetime_before_today_strategy = st.datetimes(
-    max_value=(datetime.now() - timedelta(days=1)).replace(
-        hour=23, minute=59, second=59
-    ),
+    max_value=DATETIME_TODAY_MIDNIGHT - timedelta(microseconds=1),
     min_value=datetime(1970, 1, 1, 12, 0, 0),
     timezones=st.just(timezone.utc),
 )
