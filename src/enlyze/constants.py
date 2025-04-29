@@ -4,7 +4,7 @@ ENLYZE_BASE_URL = "https://app.enlyze.com"
 #: URL sub-path of the ENLYZE platform API.
 PLATFORM_API_SUB_PATH = "api/v2/"
 
-#: HTTP timeout for requests to the Timeseries API.
+#: HTTP timeout for requests to the ENLYZE platform.
 #:
 #: Reference: https://www.python-httpx.org/advanced/timeouts/
 HTTPX_TIMEOUT = 30.0
