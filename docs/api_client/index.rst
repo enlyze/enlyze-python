@@ -1,4 +1,4 @@
-Timeseries API
+API Client
 ==============
 
 .. toctree::
