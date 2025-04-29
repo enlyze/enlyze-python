@@ -77,7 +77,6 @@ class PlatformApiClient:
         try:
             response = self._client.get(api_path, **kwargs)
         except Exception as e:
-            print(e)
             raise EnlyzeError(
                 "Couldn't read from the ENLYZE platform API "
                 f"(GET {self._full_url(api_path)})",
