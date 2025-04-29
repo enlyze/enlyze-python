@@ -108,9 +108,9 @@ class PlatformApiClient:
     def get_paginated(
         self, api_path: str, model: Type[T], **kwargs: Any
     ) -> Iterator[T]:
-        """Retrieve objects from paginated ENLYZE Platform API endpoint via HTTP GET
+        """Retrieve objects from a paginated ENLYZE platform API endpoint via HTTP GET
 
-        :param api_path: Relative URL path inside the ENLYZE Platform API
+        :param api_path: Relative URL path inside the ENLYZE platform API
         :param model: Class derived from
             :class:`~enlyze.api_client.models.PlatformApiModel`
 
