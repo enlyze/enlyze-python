@@ -110,7 +110,7 @@ class PlatformApiClient:
         """Retrieve objects from a paginated ENLYZE platform API endpoint via HTTP GET
 
         :param api_path: Relative URL path inside the ENLYZE platform API
-        :param model: Class derived from
+        :param model: API response model class derived from
             :class:`~enlyze.api_client.models.PlatformApiModel`
 
         :returns: Instances of ``model`` retrieved from the ``api_path`` endpoint
