@@ -31,14 +31,9 @@ class Site(PlatformApiModel):
         )
 
 
-class MachineBase(PlatformApiModel):
-    """The machine related information returned for a :class:`.ProductionRun`"""
-
+class Machine(PlatformApiModel):
     name: str
     uuid: UUID
-
-
-class Machine(MachineBase):
     genesis_date: date
     site: UUID
 
@@ -160,7 +155,7 @@ class Quantity(PlatformApiModel):
 
 class ProductionRun(PlatformApiModel):
     uuid: UUID
-    machine: MachineBase
+    machine: UUID
     average_throughput: Optional[float]
     production_order: str
     product: Product
@@ -195,7 +190,7 @@ class ProductionRun(PlatformApiModel):
 
         return user_models.ProductionRun(
             uuid=self.uuid,
-            machine=machines_by_uuid[self.machine.uuid],
+            machine=machines_by_uuid[self.machine],
             average_throughput=self.average_throughput,
             production_order=self.production_order,
             product=self.product.to_user_model(),
