@@ -67,13 +67,11 @@ class PlatformApiClient:
 
         :param api_path: Relative URL path inside the API name space (or a full URL)
 
-        :raises: :exc:`~enlyze.errors.EnlyzeError` on request failure
-
-        :raises: :exc:`~enlyze.errors.EnlyzeError` on non-2xx status code
-
-        :raises: :exc:`~enlyze.errors.EnlyzeError` on non-JSON payload
-
         :returns: JSON payload of the response as Python object
+
+        :raises: :exc:`~enlyze.errors.EnlyzeError` on request failure
+        :raises: :exc:`~enlyze.errors.EnlyzeError` on non-2xx status code
+        :raises: :exc:`~enlyze.errors.EnlyzeError` on non-JSON payload
 
         """
         try:
@@ -115,10 +113,13 @@ class PlatformApiClient:
         :param api_path: Relative URL path inside the ENLYZE Platform API
         :param model: Class derived from
             :class:`~enlyze.api_client.models.PlatformApiModel`
+
+        :returns: Instances of ``model`` retrieved from the ``api_path`` endpoint
+
         :raises: :exc:`~enlyze.errors.EnlyzeError` on invalid pagination schema
         :raises: :exc:`~enlyze.errors.EnlyzeError` on invalid data schema
         :raises: see :py:meth:`get` for more errors raised by this method
-        :returns: Instances of ``model`` retrieved from the ``api_path`` endpoint
+
         """
 
         params = kwargs.pop("params", {})

@@ -17,7 +17,6 @@ Models
     :exclude-members: model_config, model_fields
     :show-inheritance:
 
-
 .. autoclass:: Machine()
     :members:
     :undoc-members:

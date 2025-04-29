@@ -102,12 +102,11 @@ class EnlyzeClient:
     def get_sites(self) -> list[user_models.Site]:
         """Retrieve all :ref:`sites <site>` of your organization.
 
-        :raises: |token-error|
-
-        :raises: |generic-error|
-
         :returns: Sites of your organization
         :rtype: list[:class:`~enlyze.models.Site`]
+
+        :raises: |token-error|
+        :raises: |generic-error|
 
         """
         return [site.to_user_model() for site in self._get_sites()]
@@ -127,12 +126,11 @@ class EnlyzeClient:
         :param site: Only get machines of this site. Gets all machines of the
             organization if None.
 
-        :raises: |token-error|
-
-        :raises: |generic-error|
-
         :returns: Machines
         :rtype: list[:class:`~enlyze.models.Machine`]
+
+        :raises: |token-error|
+        :raises: |generic-error|
 
         """
 
@@ -168,11 +166,10 @@ class EnlyzeClient:
 
         :param machine: The machine for which to get all variables.
 
-        :raises: |token-error|
-
-        :raises: |generic-error|
-
         :returns: Variables of ``machine``
+
+        :raises: |token-error|
+        :raises: |generic-error|
 
         """
         return [
@@ -290,12 +287,11 @@ class EnlyzeClient:
         :param end: End of the time frame for which to fetch timeseries data.
         :param variables: The variables for which to fetch timeseries data.
 
-        :raises: |token-error|
-
-        :raises: |generic-error|
-
         :returns: Timeseries data or ``None`` if the API returned no data for the
             request
+
+        :raises: |token-error|
+        :raises: |generic-error|
 
         """
 
@@ -329,14 +325,12 @@ class EnlyzeClient:
             with. Must be greater than or equal
             :const:`~enlyze.constants.MINIMUM_RESAMPLING_INTERVAL`.
 
-        :raises: |token-error|
-
-        :raises: |resampling-error|
-
-        :raises: |generic-error|
-
         :returns: Timeseries data or ``None`` if the API returned no data for the
             request
+
+        :raises: |token-error|
+        :raises: |resampling-error|
+        :raises: |generic-error|
 
         """  # noqa: E501
         return self._get_timeseries(start, end, variables, resampling_interval)
@@ -379,12 +373,11 @@ class EnlyzeClient:
         :param product: Filter production runs by product.
         :param production_order: Filter production runs by production order.
 
-        :raises: |token-error|
-
-        :raises: |generic-error|
-
         :returns: Production runs
         :rtype: :class:`~enlyze.models.ProductionRuns`
+
+        :raises: |token-error|
+        :raises: |generic-error|
 
         """
         if start and end:

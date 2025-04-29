@@ -10,9 +10,8 @@ import enlyze.models as user_models
 class PlatformApiModel(BaseModel):
     """Base class for Enlyze Platform API object models using pydantic
 
-    All objects received from the Enlyze Platform API are passed into models
-    that derive from this class and thus use pydantic for schema definition
-    and validation.
+    All objects received from the Enlyze Platform API are passed into models that derive
+    from this class and thus use pydantic for schema definition and validation.
 
     """
 
@@ -33,8 +32,7 @@ class Site(PlatformApiModel):
 
 
 class MachineBase(PlatformApiModel):
-    """The machine related information returned for a
-    :class:`.ProductionRun`"""
+    """The machine related information returned for a :class:`.ProductionRun`"""
 
     name: str
     uuid: UUID

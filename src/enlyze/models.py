@@ -169,10 +169,10 @@ class TimeseriesData:
         :param use_display_names: Whether to return display names instead of variable
             UUIDs. If there is no display name, fall back to UUID.
 
-        :raises: :exc:`~enlyze.errors.DuplicateDisplayNameError` when duplicate
-            display names would be returned instead of UUIDs.
-
         :returns: Iterator over rows
+
+        :raises: :exc:`~enlyze.errors.DuplicateDisplayNameError` when duplicate display
+            names would be returned instead of UUIDs.
 
         """
         time_column, *variable_columns = self._columns
@@ -199,10 +199,10 @@ class TimeseriesData:
         :param use_display_names: Whether to return display names instead of variable
             UUIDs. If there is no display name, fall back to UUID.
 
-        :raises: :exc:`~enlyze.errors.DuplicateDisplayNameError` when duplicate
-            display names would be returned instead of UUIDs.
-
         :returns: DataFrame with timeseries data indexed by time
+
+        :raises: :exc:`~enlyze.errors.DuplicateDisplayNameError` when duplicate display
+            names would be returned instead of UUIDs.
 
         """
 
@@ -322,6 +322,7 @@ class ProductionRuns(list[ProductionRun]):
         <python:datetime-naive-aware>` :py:class:`datetime.datetime` localized in UTC.
 
         :returns: DataFrame with production runs.
+
         """
         if not self:
             return pandas.DataFrame()
