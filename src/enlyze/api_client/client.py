@@ -137,8 +137,6 @@ class PlatformApiClient:
             if not page_data:
                 break
 
-            # if `data` is a list we assume there are multiple objects inside.
-            # if `data` is a dict then we treat it as only one object
             page_data = page_data if isinstance(page_data, list) else [page_data]
 
             for elem in page_data:
