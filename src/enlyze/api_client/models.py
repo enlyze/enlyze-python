@@ -10,9 +10,9 @@ import enlyze.models as user_models
 class PlatformApiModel(BaseModel):
     """Base class for ENLYZE platform API object models using Pydantic
 
-    All objects received from the ENLYZE platform API are passed into models
-    that derive from this class and thus use Pydantic for schema definition
-    and validation.
+    All objects received from the ENLYZE platform API are passed into models that derive
+    from this class and thus use Pydantic for schema definition and validation.
+
     """
 
 

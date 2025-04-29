@@ -1,5 +1,5 @@
 API Client
-==============
+==========
 
 .. toctree::
     :maxdepth: 1
