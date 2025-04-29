@@ -19,6 +19,7 @@ class Site:
 
     """
 
+    #: Stable identifier of the site.
     uuid: UUID
 
     #: Display name of the site.
