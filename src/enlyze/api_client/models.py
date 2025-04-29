@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from datetime import date, datetime, timedelta
 from typing import Any, Optional, Sequence
 from uuid import UUID
@@ -14,6 +15,10 @@ class PlatformApiModel(BaseModel):
     from this class and thus use Pydantic for schema definition and validation.
 
     """
+
+    @abstractmethod
+    def to_user_model(self, *args: Any, **kwargs: Any) -> Any:
+        """Convert to a model that will be returned to the user."""
 
 
 class Site(PlatformApiModel):
