@@ -37,7 +37,7 @@ def _get_timeseries_data_from_pages(
         return None
 
     if "time" not in timeseries_data.columns:
-        raise EnlyzeError("Timeseries API didn't return timestamps")
+        raise EnlyzeError("Platform API didn't return timestamps")
 
     for page in pages:
         timeseries_data.extend(page)
@@ -252,7 +252,7 @@ class EnlyzeClient:
             data is not None for data in timeseries_data_chunked
         ):
             raise EnlyzeError(
-                "The timeseries API didn't return data for some of the variables."
+                "The platform API didn't return data for some of the variables."
             )
 
         try:

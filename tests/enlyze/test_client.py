@@ -347,7 +347,7 @@ def test__get_timeseries_raises_on_mixed_response(
     machine,
 ):
     """
-    Tests that an `EnlyzeError` is raised if the timeseries API returns
+    Tests that an `EnlyzeError` is raised if the platform API returns
     data for some of the variables but not all of them.
     """
 
