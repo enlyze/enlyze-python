@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from enlyze.api_clients.timeseries.models import TimeseriesData
+from enlyze.api_client.models import TimeseriesData
 
 # We use this to skip columns that contain the timestamp assuming
 # it starts at the beginning of the sequence. We also use it

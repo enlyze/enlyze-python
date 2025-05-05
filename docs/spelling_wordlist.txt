@@ -11,6 +11,7 @@ enlyze
 entrypoint
 iterable
 noqa
+Pydantic
 quickstart
 resample
 resampled

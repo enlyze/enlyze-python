@@ -1,5 +1,5 @@
-Timeseries API
-==============
+API Client
+==========
 
 .. toctree::
     :maxdepth: 1
