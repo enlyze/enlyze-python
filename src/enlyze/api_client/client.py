@@ -62,7 +62,7 @@ class PlatformApiClient:
         """Construct full URL from relative URL"""
         return str(self._client.build_request("", api_path).url)
 
-    def get(self, api_path: str, **kwargs: Any) -> Any:
+    def get(self, api_path: str | httpx.URL, **kwargs: Any) -> Any:
         """Wraps :meth:`httpx.Client.get` with defensive error handling
 
         :param api_path: Relative URL path inside the API name space (or a full URL)
@@ -105,7 +105,7 @@ class PlatformApiClient:
             ) from e
 
     def get_paginated(
-        self, api_path: str, model: Type[T], **kwargs: Any
+        self, api_path: str | httpx.URL, model: Type[T], **kwargs: Any
     ) -> Iterator[T]:
         """Retrieve objects from a paginated ENLYZE platform API endpoint via HTTP GET
 
@@ -120,11 +120,14 @@ class PlatformApiClient:
         :raises: see :py:meth:`get` for more errors raised by this method
 
         """
-
+        url = api_path
         params = kwargs.pop("params", {})
 
         while True:
-            response_body = self.get(api_path, params=params, **kwargs)
+            # merge query parameters into URL instead of replacing (ref httpx#3364)
+            url_with_query_params = httpx.URL(url).copy_merge_params(params)
+
+            response_body = self.get(url_with_query_params, **kwargs)
 
             try:
                 paginated_response = _PaginatedResponse.model_validate(response_body)
