@@ -19,7 +19,7 @@ class TokenAuth(Auth):
         if not token:
             raise InvalidTokenError("Token must not be empty")
 
-        self._auth_header = f"Token {token}"
+        self._auth_header = f"Bearer {token}"
 
     def auth_flow(self, request: Request) -> Generator[Request, Response, None]:
         """Inject token into authorization header"""

@@ -33,8 +33,8 @@ class ResamplingValidationError(EnlyzeError):
 class DuplicateDisplayNameError(EnlyzeError):
     """Variables with duplicate display names
 
-    Resolving variable UUIDs to display names would result in ambiguity because
-    multiple variables have the same display name. You should either fix the
-    duplicate variable display names via the ENLYZE App or don't request them at
-    the same time.
+    Resolving variable UUIDs to display names would result in ambiguity because multiple
+    variables have the same display name. You should either fix the duplicate variable
+    display names via the ENLYZE App or don't request them at the same time.
+
     """
