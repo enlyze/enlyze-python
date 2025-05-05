@@ -17,7 +17,7 @@ def test_token_auth(token):
     response = httpx.get("https://foo.bar/", auth=auth)
 
     assert my_route.called
-    assert response.request.headers["Authorization"] == f"Bearer {token}"
+    assert response.request.headers["Authorization"] == f"Token {token}"
 
 
 @pytest.mark.parametrize("invalid_token", {"", None, 0})

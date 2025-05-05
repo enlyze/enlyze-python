@@ -8,13 +8,23 @@ import respx
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-import enlyze.api_client.models as platform_api_models
+import enlyze.api_clients.production_runs.models as production_runs_api_models
+import enlyze.api_clients.timeseries.models as timeseries_api_models
 import enlyze.models as user_models
-from enlyze.api_client.client import _Metadata, _PaginatedResponse
+from enlyze.api_clients.production_runs.client import (
+    _Metadata as _ProductionRunsApiResponseMetadata,
+)
+from enlyze.api_clients.production_runs.client import (
+    _PaginatedResponse as _PaginatedProductionRunsResponse,
+)
+from enlyze.api_clients.timeseries.client import (
+    _PaginatedResponse as _PaginatedTimeseriesResponse,
+)
 from enlyze.client import EnlyzeClient
 from enlyze.constants import (
     ENLYZE_BASE_URL,
-    PLATFORM_API_SUB_PATH,
+    PRODUCTION_RUNS_API_SUB_PATH,
+    TIMESERIES_API_SUB_PATH,
 )
 from enlyze.errors import EnlyzeError, ResamplingValidationError
 from tests.conftest import (
@@ -27,34 +37,35 @@ MOCK_RESPONSE_HEADERS = {"Content-Type": "application/json"}
 MACHINE_UUID = "ebef7e5a-5921-4cf3-9a52-7ff0e98e8306"
 PRODUCT_CODE = "product-code"
 PRODUCTION_ORDER = "production-order"
-SITE_UUID_ONE = "4e655719-03e8-465e-9e24-db42c2d6735a"
-SITE_UUID_TWO = "088da69d-356a-41f8-819e-04c38592f0ac"
+SITE_ID = 1
 
 create_float_strategy = partial(
     st.floats, allow_nan=False, allow_infinity=False, allow_subnormal=False
 )
 
 oee_score_strategy = st.builds(
-    platform_api_models.OEEComponent,
+    production_runs_api_models.OEEComponent,
     score=create_float_strategy(min_value=0, max_value=1.0),
     time_loss=st.just(10),
 )
 
 quantity_strategy = st.builds(
-    platform_api_models.Quantity,
+    production_runs_api_models.Quantity,
     value=create_float_strategy(min_value=0, max_value=1.0),
 )
 
 
 production_runs_strategy = st.lists(
     st.builds(
-        platform_api_models.ProductionRun,
+        production_runs_api_models.ProductionRun,
         uuid=st.uuids(),
         start=datetime_before_today_strategy,
         end=datetime_today_until_now_strategy,
-        machine=st.just(MACHINE_UUID),
+        appliance=st.builds(
+            production_runs_api_models.Machine, uuid=st.just(MACHINE_UUID)
+        ),
         product=st.builds(
-            platform_api_models.Product,
+            production_runs_api_models.Product,
             code=st.just(PRODUCT_CODE),
         ),
         production_order=st.just(PRODUCTION_ORDER),
@@ -81,13 +92,23 @@ def end_datetime():
     return datetime.now()
 
 
-class PaginatedPlatformApiResponse(httpx.Response):
-    def __init__(self, data: list | dict, next_cursor=None) -> None:
+class PaginatedTimeseriesApiResponse(httpx.Response):
+    def __init__(self, data, next=None) -> None:
         super().__init__(
             status_code=HTTPStatus.OK,
-            text=_PaginatedResponse(
+            text=_PaginatedTimeseriesResponse(data=data, next=next).model_dump_json(),
+            headers=MOCK_RESPONSE_HEADERS,
+        )
+
+
+class PaginatedProductionRunsApiResponse(httpx.Response):
+    def __init__(self, data, has_more=False, next_cursor=None) -> None:
+        super().__init__(
+            status_code=HTTPStatus.OK,
+            text=_PaginatedProductionRunsResponse(
                 data=data,
-                metadata=_Metadata(
+                metadata=_ProductionRunsApiResponseMetadata(
+                    has_more=has_more,
                     next_cursor=next_cursor,
                 ),
             ).model_dump_json(),
@@ -105,39 +126,33 @@ def make_client():
 
 
 @given(
-    site1=st.builds(platform_api_models.Site),
-    site2=st.builds(platform_api_models.Site),
+    site1=st.builds(timeseries_api_models.Site),
+    site2=st.builds(timeseries_api_models.Site),
 )
 def test_get_sites(site1, site2):
     client = make_client()
 
-    with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
-        mock.get("sites").mock(
-            PaginatedPlatformApiResponse(data=[s.model_dump() for s in [site1, site2]])
-        )
+    with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
+        mock.get("sites").mock(PaginatedTimeseriesApiResponse(data=[site1, site2]))
         sites = client.get_sites()
 
     assert sites == [site1.to_user_model(), site2.to_user_model()]
 
 
 @given(
-    site1=st.builds(platform_api_models.Site, uuid=st.just(SITE_UUID_ONE)),
-    site2=st.builds(platform_api_models.Site, uuid=st.just(SITE_UUID_TWO)),
-    machine1=st.builds(platform_api_models.Machine, site=st.just(SITE_UUID_ONE)),
-    machine2=st.builds(platform_api_models.Machine, site=st.just(SITE_UUID_TWO)),
+    site1=st.builds(timeseries_api_models.Site, id=st.just(1)),
+    site2=st.builds(timeseries_api_models.Site, id=st.just(2)),
+    machine1=st.builds(timeseries_api_models.Machine, site=st.just(1)),
+    machine2=st.builds(timeseries_api_models.Machine, site=st.just(2)),
 )
 def test_get_machines(site1, site2, machine1, machine2):
     client = make_client()
 
-    with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
-        mock.get("machines").mock(
-            PaginatedPlatformApiResponse(
-                data=[m.model_dump() for m in [machine1, machine2]]
-            )
+    with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
+        mock.get("appliances").mock(
+            PaginatedTimeseriesApiResponse(data=[machine1, machine2])
         )
-        mock.get("sites").mock(
-            PaginatedPlatformApiResponse(data=[s.model_dump() for s in [site1, site2]])
-        )
+        mock.get("sites").mock(PaginatedTimeseriesApiResponse(data=[site1, site2]))
 
         all_machines = client.get_machines()
         assert all_machines == [
@@ -152,32 +167,28 @@ def test_get_machines(site1, site2, machine1, machine2):
 
 
 @given(
-    machine=st.builds(platform_api_models.Machine),
+    machine=st.builds(timeseries_api_models.Machine),
 )
 def test_get_machines_site_not_found(machine):
     client = make_client()
 
-    with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
-        mock.get("sites").mock(PaginatedPlatformApiResponse(data=[]))
-        mock.get("machines").mock(
-            PaginatedPlatformApiResponse(data=[machine.model_dump()])
-        )
+    with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
+        mock.get("sites").mock(PaginatedTimeseriesApiResponse(data=[]))
+        mock.get("appliances").mock(PaginatedTimeseriesApiResponse(data=[machine]))
 
         assert client.get_machines() == []
 
 
 @given(
     machine=st.builds(user_models.Machine),
-    var1=st.builds(platform_api_models.Variable),
-    var2=st.builds(platform_api_models.Variable),
+    var1=st.builds(timeseries_api_models.Variable),
+    var2=st.builds(timeseries_api_models.Variable),
 )
 def test_get_variables(machine, var1, var2):
     client = make_client()
 
-    with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
-        mock.get("variables").mock(
-            PaginatedPlatformApiResponse(data=[v.model_dump() for v in [var1, var2]])
-        )
+    with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
+        mock.get("variables").mock(PaginatedTimeseriesApiResponse(data=[var1, var2]))
         variables = client.get_variables(machine)
 
     assert variables == [
@@ -225,11 +236,10 @@ def test_get_timeseries(
     client = make_client()
     variable = data.draw(variable_strategy)
 
-    with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
-        cursor = "next-1"
-        mock.get("timeseries", params=f"cursor={cursor}").mock(
-            PaginatedPlatformApiResponse(
-                data=platform_api_models.TimeseriesData(
+    with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
+        mock.get("timeseries", params="offset=1").mock(
+            PaginatedTimeseriesApiResponse(
+                data=timeseries_api_models.TimeseriesData(
                     columns=["time", str(variable.uuid)],
                     records=records[1:],
                 ).model_dump()
@@ -237,12 +247,12 @@ def test_get_timeseries(
         )
 
         mock.get("timeseries").mock(
-            side_effect=lambda request: PaginatedPlatformApiResponse(
-                data=platform_api_models.TimeseriesData(
+            side_effect=lambda request: PaginatedTimeseriesApiResponse(
+                data=timeseries_api_models.TimeseriesData(
                     columns=["time", str(variable.uuid)],
                     records=records[:1],
                 ).model_dump(),
-                next_cursor=cursor,
+                next=str(request.url.join("?offset=1")),
             )
         )
         if timeseries_call == "without_resampling":
@@ -275,7 +285,7 @@ def test_get_timeseries(
     "data",
     [
         {},
-        platform_api_models.TimeseriesData(columns=[], records=[]).model_dump(),
+        timeseries_api_models.TimeseriesData(columns=[], records=[]).model_dump(),
     ],
 )
 @pytest.mark.parametrize(
@@ -309,8 +319,8 @@ def test_get_timeseries_returns_none_on_empty_response(
     variable = data_strategy.draw(variable_strategy)
     client = make_client()
 
-    with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
-        mock.get("timeseries").mock(PaginatedPlatformApiResponse(data=data))
+    with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
+        mock.get("timeseries").mock(PaginatedTimeseriesApiResponse(data=data))
         if timeseries_call == "without_resampling":
             assert (
                 client.get_timeseries(start_datetime, end_datetime, [variable]) is None
@@ -335,7 +345,7 @@ def test_get_timeseries_returns_none_on_empty_response(
         min_size=2,
         max_size=5,
     ),
-    machine=st.builds(platform_api_models.Machine, uuid=st.just(MACHINE_UUID)),
+    machine=st.builds(timeseries_api_models.Machine, uuid=st.just(MACHINE_UUID)),
 )
 @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
 def test__get_timeseries_raises_on_mixed_response(
@@ -347,7 +357,7 @@ def test__get_timeseries_raises_on_mixed_response(
     machine,
 ):
     """
-    Tests that an `EnlyzeError` is raised if the platform API returns
+    Tests that an `EnlyzeError` is raised if the timeseries API returns
     data for some of the variables but not all of them.
     """
 
@@ -371,11 +381,11 @@ def test__get_timeseries_raises_on_mixed_response(
         )
     )
 
-    with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
+    with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
         mock.get("timeseries").mock(
             side_effect=[
-                PaginatedPlatformApiResponse(
-                    data=platform_api_models.TimeseriesData(
+                PaginatedTimeseriesApiResponse(
+                    data=timeseries_api_models.TimeseriesData(
                         columns=[
                             "time",
                             *[
@@ -386,8 +396,8 @@ def test__get_timeseries_raises_on_mixed_response(
                         records=records,
                     ).model_dump(),
                 ),
-                PaginatedPlatformApiResponse(
-                    data=platform_api_models.TimeseriesData(
+                PaginatedTimeseriesApiResponse(
+                    data=timeseries_api_models.TimeseriesData(
                         columns=[],
                         records=[],
                     ).model_dump(),
@@ -442,10 +452,10 @@ def test_get_timeseries_raises_api_returned_no_timestamps(
 ):
     client = make_client()
 
-    with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
+    with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
         mock.get("timeseries").mock(
-            PaginatedPlatformApiResponse(
-                data=platform_api_models.TimeseriesData(
+            PaginatedTimeseriesApiResponse(
+                data=timeseries_api_models.TimeseriesData(
                     columns=["something but not time"],
                     records=[],
                 ).model_dump()
@@ -494,7 +504,7 @@ def test__get_timeseries_raises_on_chunk_value_error(
     variable=st.builds(
         user_models.Variable,
         data_type=st.just("INTEGER"),
-        machine=st.builds(platform_api_models.Machine),
+        machine=st.builds(timeseries_api_models.Machine),
     ),
     records=st.lists(
         st.tuples(
@@ -515,10 +525,10 @@ def test__get_timeseries_raises_on_merge_value_error(
 
     monkeypatch.setattr("enlyze.client.reduce", f)
 
-    with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
+    with respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as mock:
         mock.get("timeseries").mock(
-            PaginatedPlatformApiResponse(
-                data=platform_api_models.TimeseriesData(
+            PaginatedTimeseriesApiResponse(
+                data=timeseries_api_models.TimeseriesData(
                     columns=["time", str(variable.uuid)],
                     records=records,
                 ).model_dump()
@@ -535,11 +545,11 @@ def test__get_timeseries_raises_on_merge_value_error(
         st.text(),
     ),
     machine=st.builds(
-        platform_api_models.Machine,
-        site=st.just(SITE_UUID_ONE),
+        timeseries_api_models.Machine,
+        site=st.just(SITE_ID),
         uuid=st.just(MACHINE_UUID),
     ),
-    site=st.builds(platform_api_models.Site, uuid=st.just(SITE_UUID_ONE)),
+    site=st.builds(timeseries_api_models.Site, id=st.just(SITE_ID)),
     start=st.one_of(datetime_before_today_strategy, st.none()),
     end=st.one_of(datetime_today_until_now_strategy, st.none()),
     production_runs=production_runs_strategy,
@@ -559,13 +569,20 @@ def test_get_production_runs(
     machine_user_model = machine.to_user_model(site_user_model)
     machines_by_uuid = {machine.uuid: machine_user_model}
 
-    with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
-        mock.get("machines").mock(
-            PaginatedPlatformApiResponse(data=[machine.model_dump()])
+    with (
+        respx_mock_with_base_url(TIMESERIES_API_SUB_PATH) as timeseries_api_mock,
+        respx_mock_with_base_url(
+            PRODUCTION_RUNS_API_SUB_PATH
+        ) as production_runs_api_mock,
+    ):
+        timeseries_api_mock.get("appliances").mock(
+            PaginatedTimeseriesApiResponse(data=[machine])
         )
-        mock.get("sites").mock(PaginatedPlatformApiResponse(data=[site.model_dump()]))
-        mock.get("production-runs").mock(
-            PaginatedPlatformApiResponse(
+        timeseries_api_mock.get("sites").mock(
+            PaginatedTimeseriesApiResponse(data=[site])
+        )
+        production_runs_api_mock.get("production-runs").mock(
+            PaginatedProductionRunsApiResponse(
                 data=[p.model_dump(by_alias=True) for p in production_runs]
             )
         )

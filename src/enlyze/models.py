@@ -19,8 +19,7 @@ class Site:
 
     """
 
-    #: Stable identifier of the site.
-    uuid: UUID
+    _id: int
 
     #: Display name of the site.
     display_name: str
@@ -170,10 +169,10 @@ class TimeseriesData:
         :param use_display_names: Whether to return display names instead of variable
             UUIDs. If there is no display name, fall back to UUID.
 
-        :returns: Iterator over rows
+        :raises: :exc:`~enlyze.errors.DuplicateDisplayNameError` when duplicate
+            display names would be returned instead of UUIDs.
 
-        :raises: :exc:`~enlyze.errors.DuplicateDisplayNameError` when duplicate display
-            names would be returned instead of UUIDs.
+        :returns: Iterator over rows
 
         """
         time_column, *variable_columns = self._columns
@@ -200,10 +199,10 @@ class TimeseriesData:
         :param use_display_names: Whether to return display names instead of variable
             UUIDs. If there is no display name, fall back to UUID.
 
-        :returns: DataFrame with timeseries data indexed by time
+        :raises: :exc:`~enlyze.errors.DuplicateDisplayNameError` when duplicate
+            display names would be returned instead of UUIDs.
 
-        :raises: :exc:`~enlyze.errors.DuplicateDisplayNameError` when duplicate display
-            names would be returned instead of UUIDs.
+        :returns: DataFrame with timeseries data indexed by time
 
         """
 
@@ -225,7 +224,7 @@ class TimeseriesData:
 class OEEComponent:
     """Individual Overall Equipment Effectiveness (OEE) score
 
-    This is calculated by the ENLYZE platform based on a combination of real machine
+    This is calculated by the ENLYZE Platform based on a combination of real machine
     data and production order booking information provided by the customer.
 
     For more information, please check out https://www.oee.com
@@ -323,7 +322,6 @@ class ProductionRuns(list[ProductionRun]):
         <python:datetime-naive-aware>` :py:class:`datetime.datetime` localized in UTC.
 
         :returns: DataFrame with production runs.
-
         """
         if not self:
             return pandas.DataFrame()

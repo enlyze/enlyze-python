@@ -1,35 +1,17 @@
 Models
 ======
 
-.. currentmodule:: enlyze.api_client.models
+.. currentmodule:: enlyze.api_clients.production_runs.models
 
-.. autoclass:: PlatformApiModel()
+.. autoclass:: ProductionRunsApiModel()
 
-.. autoclass:: Site()
+.. autoclass:: ProductionRun()
     :members:
     :undoc-members:
     :exclude-members: model_config, model_fields
     :show-inheritance:
 
 .. autoclass:: Machine()
-    :members:
-    :undoc-members:
-    :exclude-members: model_config, model_fields
-    :show-inheritance:
-
-.. autoclass:: Variable()
-    :members:
-    :undoc-members:
-    :exclude-members: model_config, model_fields
-    :show-inheritance:
-
-.. autoclass:: TimeseriesData()
-    :members:
-    :undoc-members:
-    :exclude-members: model_config, model_fields
-    :show-inheritance:
-
-.. autoclass:: ProductionRun()
     :members:
     :undoc-members:
     :exclude-members: model_config, model_fields
