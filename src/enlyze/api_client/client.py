@@ -35,11 +35,11 @@ class _PaginatedResponse(BaseModel):
 
 
 class PlatformApiClient:
-    """Client class encapsulating all interaction with the ENLYZE platform API
+    """API Client class encapsulating all interaction with the ENLYZE platform
 
-    :param token: API token for the ENLYZE platform API
-    :param base_url: Base URL of the ENLYZE platform API
-    :param timeout: Global timeout for all HTTP requests sent to the ENLYZE platform API
+    :param token: API token for the ENLYZE platform
+    :param base_url: Base URL of the ENLYZE platform
+    :param timeout: Global timeout for all HTTP requests sent to the ENLYZE platform
 
     """
 
