@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath("../src"))
 
 
 project = "enlyze"
-copyright = "2025, ENLYZE GmbH"
+copyright = "2024, ENLYZE GmbH"
 author = "ENLYZE GmbH"
 
 # -- General configuration ---------------------------------------------------
