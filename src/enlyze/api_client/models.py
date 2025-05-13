@@ -24,14 +24,12 @@ class PlatformApiModel(BaseModel):
 class Site(PlatformApiModel):
     uuid: UUID
     name: str
-    address: str
 
     def to_user_model(self) -> user_models.Site:
         """Convert into a :ref:`user model <user_models>`"""
 
         return user_models.Site(
             uuid=self.uuid,
-            address=self.address,
             display_name=self.name,
         )
 

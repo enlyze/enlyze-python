@@ -227,7 +227,7 @@ def test_get_timeseries(
 
     with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
         cursor = "next-1"
-        mock.get("timeseries", params=f"cursor={cursor}").mock(
+        mock.post("timeseries", json__cursor=cursor).mock(
             PaginatedPlatformApiResponse(
                 data=platform_api_models.TimeseriesData(
                     columns=["time", str(variable.uuid)],
@@ -236,7 +236,7 @@ def test_get_timeseries(
             )
         )
 
-        mock.get("timeseries").mock(
+        mock.post("timeseries").mock(
             side_effect=lambda request: PaginatedPlatformApiResponse(
                 data=platform_api_models.TimeseriesData(
                     columns=["time", str(variable.uuid)],
@@ -310,7 +310,7 @@ def test_get_timeseries_returns_none_on_empty_response(
     client = make_client()
 
     with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
-        mock.get("timeseries").mock(PaginatedPlatformApiResponse(data=data))
+        mock.post("timeseries").mock(PaginatedPlatformApiResponse(data=data))
         if timeseries_call == "without_resampling":
             assert (
                 client.get_timeseries(start_datetime, end_datetime, [variable]) is None
@@ -372,7 +372,7 @@ def test__get_timeseries_raises_on_mixed_response(
     )
 
     with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
-        mock.get("timeseries").mock(
+        mock.post("timeseries").mock(
             side_effect=[
                 PaginatedPlatformApiResponse(
                     data=platform_api_models.TimeseriesData(
@@ -443,7 +443,7 @@ def test_get_timeseries_raises_api_returned_no_timestamps(
     client = make_client()
 
     with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
-        mock.get("timeseries").mock(
+        mock.post("timeseries").mock(
             PaginatedPlatformApiResponse(
                 data=platform_api_models.TimeseriesData(
                     columns=["something but not time"],
@@ -516,7 +516,7 @@ def test__get_timeseries_raises_on_merge_value_error(
     monkeypatch.setattr("enlyze.client.reduce", f)
 
     with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
-        mock.get("timeseries").mock(
+        mock.post("timeseries").mock(
             PaginatedPlatformApiResponse(
                 data=platform_api_models.TimeseriesData(
                     columns=["time", str(variable.uuid)],

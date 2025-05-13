@@ -25,9 +25,6 @@ class Site:
     #: Display name of the site.
     display_name: str
 
-    #: Postal address of the site. Doesn't follow a strict format.
-    address: str
-
 
 @dataclass(frozen=True)
 class Machine:
