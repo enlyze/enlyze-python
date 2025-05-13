@@ -1,5 +1,5 @@
 import json
-from enum import Enum, auto
+from enum import Enum
 from functools import cache
 from http import HTTPStatus
 from typing import Any, Iterator, Type, TypeVar
@@ -20,8 +20,8 @@ USER_AGENT_NAME_VERSION_SEPARATOR = "/"
 
 
 class RequestMethod(str, Enum):
-    GET = auto()
-    POST = auto()
+    GET = "get"
+    POST = "post"
 
 
 @cache
