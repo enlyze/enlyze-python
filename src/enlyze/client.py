@@ -226,10 +226,10 @@ class EnlyzeClient:
                 machine_uuid=machine_uuid,
                 start=start,
                 end=end,
-                variables=dict(variable_chunk),
+                variables=dict(chunk),
                 resampling_interval=resampling_interval,
             )
-            for variable_chunk in chunks
+            for chunk in chunks
         )
 
         timeseries_data_chunked = [
