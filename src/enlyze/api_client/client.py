@@ -1,4 +1,5 @@
 import json
+from enum import StrEnum, auto
 from functools import cache
 from http import HTTPStatus
 from typing import Any, Iterator, Type, TypeVar
@@ -16,6 +17,11 @@ from .models import PlatformApiModel
 T = TypeVar("T", bound=PlatformApiModel)
 
 USER_AGENT_NAME_VERSION_SEPARATOR = "/"
+
+
+class RequestMethod(StrEnum):
+    GET = auto()
+    POST = auto()
 
 
 @cache
@@ -62,9 +68,12 @@ class PlatformApiClient:
         """Construct full URL from relative URL"""
         return str(self._client.build_request("", api_path).url)
 
-    def get(self, api_path: str | httpx.URL, **kwargs: Any) -> Any:
-        """Wraps :meth:`httpx.Client.get` with defensive error handling
+    def _request(
+        self, method: RequestMethod, api_path: str | httpx.URL, **kwargs: Any
+    ) -> Any:
+        """Wraps :meth:`httpx.Client.request` with defensive error handling
 
+        :param method: HTTP method for the request
         :param api_path: Relative URL path inside the API name space (or a full URL)
 
         :returns: JSON payload of the response as Python object
@@ -74,8 +83,9 @@ class PlatformApiClient:
         :raises: :exc:`~enlyze.errors.EnlyzeError` on non-JSON payload
 
         """
+
         try:
-            response = self._client.get(api_path, **kwargs)
+            response = self._client.request(method, api_path, **kwargs)
         except Exception as e:
             raise EnlyzeError(
                 "Couldn't read from the ENLYZE platform API "
@@ -104,10 +114,42 @@ class PlatformApiClient:
                 f"(GET {self._full_url(api_path)})",
             ) from e
 
-    def get_paginated(
-        self, api_path: str | httpx.URL, model: Type[T], **kwargs: Any
+    def get(self, api_path: str | httpx.URL, **kwargs: Any) -> Any:
+        """Wraps :meth:`httpx.Client.get` with defensive error handling
+
+        :param api_path: Relative URL path inside the API name space (or a full URL)
+
+        :returns: JSON payload of the response as Python object
+
+        :raises: :exc:`~enlyze.errors.EnlyzeError` on request failure
+        :raises: :exc:`~enlyze.errors.EnlyzeError` on non-2xx status code
+        :raises: :exc:`~enlyze.errors.EnlyzeError` on non-JSON payload
+
+        """
+        return self._request(RequestMethod.GET, api_path, **kwargs)
+
+    def post(self, api_path: str | httpx.URL, **kwargs: Any) -> Any:
+        """Wraps :meth:`httpx.Client.post` with defensive error handling
+
+        :param api_path: Relative URL path inside the API name space (or a full URL)
+
+        :returns: JSON payload of the response as Python object
+
+        :raises: :exc:`~enlyze.errors.EnlyzeError` on request failure
+        :raises: :exc:`~enlyze.errors.EnlyzeError` on non-2xx status code
+        :raises: :exc:`~enlyze.errors.EnlyzeError` on non-JSON payload
+
+        """
+        return self._request(RequestMethod.POST, api_path, **kwargs)
+
+    def _request_paginated(
+        self,
+        method: RequestMethod,
+        api_path: str | httpx.URL,
+        model: Type[T],
+        **kwargs: Any,
     ) -> Iterator[T]:
-        """Retrieve objects from a paginated ENLYZE platform API endpoint via HTTP GET
+        """Retrieve objects from a paginated ENLYZE platform API GET endpoint
 
         :param api_path: Relative URL path inside the ENLYZE platform API
         :param model: API response model class derived from
@@ -117,17 +159,22 @@ class PlatformApiClient:
 
         :raises: :exc:`~enlyze.errors.EnlyzeError` on invalid pagination schema
         :raises: :exc:`~enlyze.errors.EnlyzeError` on invalid data schema
-        :raises: see :py:meth:`get` for more errors raised by this method
+        :raises: see :py:meth:`request` for more errors raised by this method
 
         """
-        url = api_path
         params = kwargs.pop("params", {})
+        body_json = kwargs.pop("json", None)
 
         while True:
             # merge query parameters into URL instead of replacing (ref httpx#3364)
-            url_with_query_params = httpx.URL(url).copy_merge_params(params)
+            url_with_query_params = httpx.URL(api_path).copy_merge_params(params)
 
-            response_body = self.get(url_with_query_params, **kwargs)
+            response_body = self._request(
+                method,
+                url_with_query_params,
+                json=body_json,
+                **kwargs,
+            )
 
             try:
                 paginated_response = _PaginatedResponse.model_validate(response_body)
@@ -155,4 +202,51 @@ class PlatformApiClient:
             if next_cursor is None:
                 break
 
-            params = {**params, "cursor": next_cursor}
+            match method:
+                case RequestMethod.GET:
+                    params = {**params, "cursor": next_cursor}
+                case RequestMethod.POST:
+                    if body_json is not None:
+                        body_json["cursor"] = next_cursor
+
+    def get_paginated(
+        self,
+        api_path: str | httpx.URL,
+        model: Type[T],
+        **kwargs: Any,
+    ) -> Iterator[T]:
+        """Retrieve objects from a paginated ENLYZE platform API endpoint via HTTP GET
+
+        :param api_path: Relative URL path inside the ENLYZE platform API
+        :param model: API response model class derived from
+            :class:`~enlyze.api_client.models.PlatformApiModel`
+
+        :returns: Instances of ``model`` retrieved from the ``api_path`` endpoint
+
+        :raises: :exc:`~enlyze.errors.EnlyzeError` on invalid pagination schema
+        :raises: :exc:`~enlyze.errors.EnlyzeError` on invalid data schema
+        :raises: see :py:meth:`get` for more errors raised by this method
+
+        """
+        return self._request_paginated(RequestMethod.GET, api_path, model, **kwargs)
+
+    def post_paginated(
+        self,
+        api_path: str | httpx.URL,
+        model: Type[T],
+        **kwargs: Any,
+    ) -> Iterator[T]:
+        """Retrieve objects from a paginated ENLYZE platform API endpoint via HTTP POST
+
+        :param api_path: Relative URL path inside the ENLYZE platform API
+        :param model: API response model class derived from
+            :class:`~enlyze.api_client.models.PlatformApiModel`
+
+        :returns: Instances of ``model`` retrieved from the ``api_path`` endpoint
+
+        :raises: :exc:`~enlyze.errors.EnlyzeError` on invalid pagination schema
+        :raises: :exc:`~enlyze.errors.EnlyzeError` on invalid data schema
+        :raises: see :py:meth:`post` for more errors raised by this method
+
+        """
+        return self._request_paginated(RequestMethod.POST, api_path, model, **kwargs)

@@ -1,7 +1,7 @@
 from collections import abc
 from datetime import datetime
 from functools import cache, reduce
-from typing import Any, Iterator, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Iterator, Mapping, Optional, Sequence, Union
 from uuid import UUID
 
 import enlyze.api_client.models as platform_api_models
@@ -10,7 +10,6 @@ from enlyze.api_client.client import PlatformApiClient
 from enlyze.constants import (
     ENLYZE_BASE_URL,
     MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST,
-    VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR,
 )
 from enlyze.errors import EnlyzeError, ResamplingValidationError
 from enlyze.iterable_tools import chunk
@@ -45,13 +44,13 @@ def _get_timeseries_data_from_pages(
     return timeseries_data
 
 
-def _get_variables_sequence_and_query_parameter_list(
+def validate_resampling(
     variables: Union[
         Sequence[user_models.Variable],
         Mapping[user_models.Variable, user_models.ResamplingMethod],
     ],
     resampling_interval: Optional[int],
-) -> Tuple[Sequence[user_models.Variable], Sequence[str]]:
+):
     if isinstance(variables, abc.Sequence) and resampling_interval is not None:
         raise ResamplingValidationError(
             "`variables` must be a mapping {variable: ResamplingMethod}"
@@ -59,22 +58,10 @@ def _get_variables_sequence_and_query_parameter_list(
 
     if resampling_interval:
         validate_resampling_interval(resampling_interval)
-        variables_sequence = []
-        variables_query_parameter_list = []
         for variable, resampling_method in variables.items():  # type: ignore
-            variables_sequence.append(variable)
-            variables_query_parameter_list.append(
-                f"{variable.uuid}"
-                f"{VARIABLE_UUID_AND_RESAMPLING_METHOD_SEPARATOR}"
-                f"{resampling_method.value}"
-            )
-
             validate_resampling_method_for_data_type(
                 resampling_method, variable.data_type
             )
-        return variables_sequence, variables_query_parameter_list
-
-    return variables, [str(v.uuid) for v in variables]  # type: ignore
 
 
 class EnlyzeClient:
@@ -183,21 +170,29 @@ class EnlyzeClient:
         machine_uuid: str,
         start: datetime,
         end: datetime,
-        variables: Sequence[str],
+        variables: dict[UUID, Optional[user_models.ResamplingMethod]],
+        # variables: Sequence[UUID],
+        # variable_resampling_methods: Optional[Sequence[user_models.ResamplingMethod]],
         resampling_interval: Optional[int],
     ) -> Iterator[platform_api_models.TimeseriesData]:
-        params: dict[str, Any] = {
+        request: dict[str, Any] = {
             "machine": machine_uuid,
-            "start_datetime": start.isoformat(),
-            "end_datetime": end.isoformat(),
-            "variables": ",".join(variables),
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+            "resampling_interval": resampling_interval,
+            "variables": [
+                {
+                    "uuid": str(v),
+                    "resampling_method": meth,
+                }
+                for v, meth in variables.items()
+            ],
         }
 
-        if resampling_interval:
-            params["resampling_interval"] = resampling_interval
-
-        return self._platform_api_client.get_paginated(
-            "timeseries", platform_api_models.TimeseriesData, params=params
+        return self._platform_api_client.post_paginated(
+            "timeseries",
+            platform_api_models.TimeseriesData,
+            json=request,
         )
 
     def _get_timeseries(
@@ -210,19 +205,19 @@ class EnlyzeClient:
         ],
         resampling_interval: Optional[int] = None,
     ) -> Optional[user_models.TimeseriesData]:
-        variables_sequence, variables_query_parameter_list = (
-            _get_variables_sequence_and_query_parameter_list(
-                variables, resampling_interval
-            )
-        )
+        validate_resampling(variables, resampling_interval)
 
-        start, end, machine_uuid = validate_timeseries_arguments(
-            start, end, variables_sequence
+        start, end, machine_uuid = validate_timeseries_arguments(start, end, variables)
+
+        variable_uuids_with_resampling_method = (
+            {v.uuid: meth for v, meth in variables.items()}
+            if isinstance(variables, dict)
+            else {v.uuid: None for v in variables}
         )
 
         try:
             chunks = chunk(
-                variables_query_parameter_list,
+                list(variable_uuids_with_resampling_method.items()),
                 MAXIMUM_NUMBER_OF_VARIABLES_PER_TIMESERIES_REQUEST,
             )
         except ValueError as e:
@@ -233,10 +228,10 @@ class EnlyzeClient:
                 machine_uuid=machine_uuid,
                 start=start,
                 end=end,
-                variables=chunk,
+                variables=dict(variable_chunk),
                 resampling_interval=resampling_interval,
             )
-            for chunk in chunks
+            for variable_chunk in chunks
         )
 
         timeseries_data_chunked = [
@@ -263,7 +258,7 @@ class EnlyzeClient:
         return timeseries_data.to_user_model(  # type: ignore
             start=start,
             end=end,
-            variables=variables_sequence,
+            variables=list(variables),
         )
 
     def get_timeseries(
