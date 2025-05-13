@@ -1,5 +1,5 @@
 import json
-from enum import StrEnum, auto
+from enum import Enum, auto
 from functools import cache
 from http import HTTPStatus
 from typing import Any, Iterator, Type, TypeVar
@@ -19,7 +19,7 @@ T = TypeVar("T", bound=PlatformApiModel)
 USER_AGENT_NAME_VERSION_SEPARATOR = "/"
 
 
-class RequestMethod(StrEnum):
+class RequestMethod(str, Enum):
     GET = auto()
     POST = auto()
 
