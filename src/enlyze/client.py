@@ -171,8 +171,6 @@ class EnlyzeClient:
         start: datetime,
         end: datetime,
         variables: dict[UUID, Optional[user_models.ResamplingMethod]],
-        # variables: Sequence[UUID],
-        # variable_resampling_methods: Optional[Sequence[user_models.ResamplingMethod]],
         resampling_interval: Optional[int],
     ) -> Iterator[platform_api_models.TimeseriesData]:
         request: dict[str, Any] = {
