@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timezone
-from typing import Iterable
+from typing import Sequence
 
 import enlyze.models as user_models
 from enlyze.constants import MINIMUM_RESAMPLING_INTERVAL
@@ -49,14 +49,14 @@ def validate_start_and_end(start: datetime, end: datetime) -> tuple[datetime, da
 def validate_timeseries_arguments(
     start: datetime,
     end: datetime,
-    variables: Iterable[user_models.Variable],
+    variables: Sequence[user_models.Variable],
 ) -> tuple[datetime, datetime, str]:
+    if not variables:
+        raise EnlyzeError("Need to request at least one variable")
+
     start, end = validate_start_and_end(start, end)
 
     machine_uuids = frozenset(v.machine.uuid for v in variables)
-
-    if not machine_uuids:
-        raise EnlyzeError("Need to request at least one variable")
 
     if len(machine_uuids) != 1:
         raise EnlyzeError(

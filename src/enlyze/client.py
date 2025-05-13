@@ -205,7 +205,13 @@ class EnlyzeClient:
     ) -> Optional[user_models.TimeseriesData]:
         validate_resampling(variables, resampling_interval)
 
-        start, end, machine_uuid = validate_timeseries_arguments(start, end, variables)
+        variables_list = list(variables)
+
+        start, end, machine_uuid = validate_timeseries_arguments(
+            start,
+            end,
+            variables_list,
+        )
 
         variable_uuids_with_resampling_method = (
             {v.uuid: meth for v, meth in variables.items()}
@@ -256,7 +262,7 @@ class EnlyzeClient:
         return timeseries_data.to_user_model(  # type: ignore
             start=start,
             end=end,
-            variables=list(variables),
+            variables=variables_list,
         )
 
     def get_timeseries(
