@@ -50,7 +50,7 @@ def validate_resampling(
         Mapping[user_models.Variable, user_models.ResamplingMethod],
     ],
     resampling_interval: Optional[int],
-):
+) -> None:
     if isinstance(variables, abc.Sequence) and resampling_interval is not None:
         raise ResamplingValidationError(
             "`variables` must be a mapping {variable: ResamplingMethod}"
