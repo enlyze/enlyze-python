@@ -251,8 +251,11 @@ class Quantity:
 class Product:
     """Representation of a product that is produced on a machine"""
 
+    #: The UUID of the product
+    uuid: UUID
+
     #: The identifier of the product
-    code: str
+    external_id: str
 
     #: An optional human-friendly name of the product
     name: Optional[str] = None
@@ -278,7 +281,7 @@ class ProductionRun:
     #: The identifier of the production order.
     production_order: str
 
-    #: The identifier of the product that was produced.
+    #: The product that was produced.
     product: Product
 
     #: The begin of the production run.

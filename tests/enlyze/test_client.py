@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from functools import partial
 from http import HTTPStatus
+from uuid import UUID
 
 import httpx
 import pytest
@@ -12,10 +13,7 @@ import enlyze.api_client.models as platform_api_models
 import enlyze.models as user_models
 from enlyze.api_client.client import _Metadata, _PaginatedResponse
 from enlyze.client import EnlyzeClient
-from enlyze.constants import (
-    ENLYZE_BASE_URL,
-    PLATFORM_API_SUB_PATH,
-)
+from enlyze.constants import ENLYZE_BASE_URL, PLATFORM_API_SUB_PATH
 from enlyze.errors import EnlyzeError, ResamplingValidationError
 from tests.conftest import (
     datetime_before_today_strategy,
@@ -25,6 +23,7 @@ from tests.conftest import (
 MOCK_RESPONSE_HEADERS = {"Content-Type": "application/json"}
 
 MACHINE_UUID = "ebef7e5a-5921-4cf3-9a52-7ff0e98e8306"
+PRODUCT_UUID = "9e756209-f562-40e4-bd76-a7f8411faef7"
 PRODUCT_CODE = "product-code"
 PRODUCTION_ORDER = "production-order"
 SITE_UUID_ONE = "4e655719-03e8-465e-9e24-db42c2d6735a"
@@ -53,10 +52,7 @@ production_runs_strategy = st.lists(
         start=datetime_before_today_strategy,
         end=datetime_today_until_now_strategy,
         machine=st.just(MACHINE_UUID),
-        product=st.builds(
-            platform_api_models.Product,
-            code=st.just(PRODUCT_CODE),
-        ),
+        product=st.just(PRODUCT_UUID),
         production_order=st.just(PRODUCTION_ORDER),
         availability=oee_score_strategy,
         productivity=oee_score_strategy,
@@ -530,9 +526,10 @@ def test__get_timeseries_raises_on_merge_value_error(
 
 @given(
     production_order=st.just(PRODUCTION_ORDER),
-    product=st.one_of(
-        st.builds(user_models.Product, code=st.just(PRODUCT_CODE)),
-        st.text(),
+    product=st.builds(
+        platform_api_models.Product,
+        uuid=st.just(PRODUCT_UUID),
+        external_id=st.just(PRODUCT_CODE),
     ),
     machine=st.builds(
         platform_api_models.Machine,
@@ -543,10 +540,16 @@ def test__get_timeseries_raises_on_merge_value_error(
     start=st.one_of(datetime_before_today_strategy, st.none()),
     end=st.one_of(datetime_today_until_now_strategy, st.none()),
     production_runs=production_runs_strategy,
+    product_param=st.one_of(
+        st.just(user_models.Product(uuid=UUID(PRODUCT_UUID), external_id=PRODUCT_CODE)),
+        st.text(),
+        st.just(None),
+    ),
 )
 def test_get_production_runs(
     production_order,
     product,
+    product_param,
     machine,
     site,
     start,
@@ -557,22 +560,28 @@ def test_get_production_runs(
 
     site_user_model = site.to_user_model()
     machine_user_model = machine.to_user_model(site_user_model)
+    product_user_model = product.to_user_model()
+
     machines_by_uuid = {machine.uuid: machine_user_model}
+    products_by_uuid = {product.uuid: product_user_model}
 
     with respx_mock_with_base_url(PLATFORM_API_SUB_PATH) as mock:
         mock.get("machines").mock(
             PaginatedPlatformApiResponse(data=[machine.model_dump()])
         )
+        mock.get("products").mock(
+            PaginatedPlatformApiResponse(data=[product.model_dump()])
+        )
         mock.get("sites").mock(PaginatedPlatformApiResponse(data=[site.model_dump()]))
         mock.get("production-runs").mock(
             PaginatedPlatformApiResponse(
-                data=[p.model_dump(by_alias=True) for p in production_runs]
+                data=[run.model_dump(by_alias=True) for run in production_runs]
             )
         )
 
         result = client.get_production_runs(
             production_order=production_order,
-            product=product,
+            product=product_param,
             machine=machine_user_model,
             start=start,
             end=end,
@@ -580,10 +589,13 @@ def test_get_production_runs(
 
         assert (
             user_models.ProductionRuns(
-                [pr.to_user_model(machines_by_uuid) for pr in production_runs]
+                pr.to_user_model(
+                    machines_by_uuid=machines_by_uuid,
+                    products_by_uuid=products_by_uuid,
+                )
+                for pr in production_runs
             )
-            == result
-        )
+        ) == result
 
         df = result.to_dataframe()
         assert len(df) == len(production_runs)
