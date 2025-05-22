@@ -24,7 +24,7 @@ MOCK_RESPONSE_HEADERS = {"Content-Type": "application/json"}
 
 MACHINE_UUID = "ebef7e5a-5921-4cf3-9a52-7ff0e98e8306"
 PRODUCT_UUID = "9e756209-f562-40e4-bd76-a7f8411faef7"
-PRODUCT_CODE = "product-code"
+PRODUCT_EXTERNAL_ID = "product-external-id"
 PRODUCTION_ORDER = "production-order"
 SITE_UUID_ONE = "4e655719-03e8-465e-9e24-db42c2d6735a"
 SITE_UUID_TWO = "088da69d-356a-41f8-819e-04c38592f0ac"
@@ -529,7 +529,7 @@ def test__get_timeseries_raises_on_merge_value_error(
     product=st.builds(
         platform_api_models.Product,
         uuid=st.just(PRODUCT_UUID),
-        external_id=st.just(PRODUCT_CODE),
+        external_id=st.just(PRODUCT_EXTERNAL_ID),
     ),
     machine=st.builds(
         platform_api_models.Machine,
@@ -541,7 +541,12 @@ def test__get_timeseries_raises_on_merge_value_error(
     end=st.one_of(datetime_today_until_now_strategy, st.none()),
     production_runs=production_runs_strategy,
     product_param=st.one_of(
-        st.just(user_models.Product(uuid=UUID(PRODUCT_UUID), external_id=PRODUCT_CODE)),
+        st.just(
+            user_models.Product(
+                uuid=UUID(PRODUCT_UUID),
+                external_id=PRODUCT_EXTERNAL_ID,
+            )
+        ),
         st.text(),
         st.just(None),
     ),
