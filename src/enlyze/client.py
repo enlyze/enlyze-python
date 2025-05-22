@@ -164,6 +164,25 @@ class EnlyzeClient:
             for variable in self._get_variables(machine.uuid)
         ]
 
+    def _get_products(self) -> Iterator[platform_api_models.Product]:
+        """Get products from the API."""
+        return self._platform_api_client.get_paginated(
+            "products",
+            platform_api_models.Product,
+        )
+
+    @cache
+    def get_products(self) -> Sequence[user_models.Product]:
+        """Retrieve all products.
+
+        :returns: All products
+
+        :raises: |token-error|
+        :raises: |generic-error|
+
+        """
+        return [product.to_user_model() for product in self._get_products()]
+
     def _get_paginated_timeseries(
         self,
         *,
@@ -337,8 +356,9 @@ class EnlyzeClient:
     def _get_production_runs(
         self,
         *,
-        production_order: Optional[str] = None,
-        product: Optional[str] = None,
+        production_order_external_id: Optional[str] = None,
+        product_external_id: Optional[str] = None,
+        product: Optional[UUID] = None,
         machine: Optional[UUID] = None,
         start: Optional[datetime] = None,
         end: Optional[datetime] = None,
@@ -346,7 +366,8 @@ class EnlyzeClient:
         """Get production runs from the API."""
 
         filters = {
-            "production_order": production_order,
+            "production-order-external-id": production_order_external_id,
+            "product-external-id": product_external_id,
             "product": product,
             "machine": machine,
             "start": start.isoformat() if start else None,
@@ -386,19 +407,22 @@ class EnlyzeClient:
         elif end:
             end = validate_datetime(end)
 
-        product_filter = (
-            product.code if isinstance(product, user_models.Product) else product
+        production_runs = self._get_production_runs(
+            machine=machine.uuid if machine else None,
+            production_order_external_id=production_order,
+            product_external_id=product if isinstance(product, str) else None,
+            product=getattr(product, "uuid", None),
+            start=start,
+            end=end,
         )
+
         machines_by_uuid = {a.uuid: a for a in self.get_machines()}
+        products_by_uuid = {p.uuid: p for p in self.get_products()}
+
         return user_models.ProductionRuns(
-            [
-                production_run.to_user_model(machines_by_uuid)
-                for production_run in self._get_production_runs(
-                    machine=machine.uuid if machine else None,
-                    production_order=production_order,
-                    product=product_filter,
-                    start=start,
-                    end=end,
-                )
-            ]
+            production_run.to_user_model(
+                machines_by_uuid=machines_by_uuid,
+                products_by_uuid=products_by_uuid,
+            )
+            for production_run in production_runs
         )
