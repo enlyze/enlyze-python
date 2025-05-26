@@ -254,7 +254,7 @@ class Product:
     #: The UUID of the product
     uuid: UUID
 
-    #: The identifier of the product
+    #: The identifier of the product in the external system it was synchronized from
     external_id: str
 
     #: An optional human-friendly name of the product
