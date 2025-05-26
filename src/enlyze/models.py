@@ -278,7 +278,8 @@ class ProductionRun:
     #: The average throughput of the production run excluding downtimes.
     average_throughput: Optional[float]
 
-    #: The identifier of the production order in the external system it was synchronized from.
+    #: The identifier of the production order in the external system it was
+    #: synchronized from.
     production_order: str
 
     #: The product that was produced.
