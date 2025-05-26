@@ -131,14 +131,16 @@ class OEEComponent(PlatformApiModel):
 
 
 class Product(PlatformApiModel):
-    code: str
+    uuid: UUID
+    external_id: str
     name: Optional[str]
 
     def to_user_model(self) -> user_models.Product:
         """Convert into a :ref:`user model <user_models>`"""
 
         return user_models.Product(
-            code=self.code,
+            uuid=self.uuid,
+            external_id=self.external_id,
             name=self.name,
         )
 
@@ -161,7 +163,7 @@ class ProductionRun(PlatformApiModel):
     machine: UUID
     average_throughput: Optional[float]
     production_order: str
-    product: Product
+    product: UUID
     start: datetime
     end: Optional[datetime]
     quantity_total: Optional[Quantity]
@@ -173,7 +175,9 @@ class ProductionRun(PlatformApiModel):
     productivity: Optional[OEEComponent]
 
     def to_user_model(
-        self, machines_by_uuid: dict[UUID, user_models.Machine]
+        self,
+        machines_by_uuid: dict[UUID, user_models.Machine],
+        products_by_uuid: dict[UUID, user_models.Product],
     ) -> user_models.ProductionRun:
         """Convert into a :ref:`user model <user_models>`"""
 
@@ -196,7 +200,7 @@ class ProductionRun(PlatformApiModel):
             machine=machines_by_uuid[self.machine],
             average_throughput=self.average_throughput,
             production_order=self.production_order,
-            product=self.product.to_user_model(),
+            product=products_by_uuid[self.product],
             start=self.start,
             end=self.end,
             quantity_total=quantity_total,

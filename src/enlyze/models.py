@@ -251,8 +251,11 @@ class Quantity:
 class Product:
     """Representation of a product that is produced on a machine"""
 
-    #: The identifier of the product
-    code: str
+    #: The UUID of the product
+    uuid: UUID
+
+    #: The identifier of the product in the external system it was synchronized from
+    external_id: str
 
     #: An optional human-friendly name of the product
     name: Optional[str] = None
@@ -275,10 +278,11 @@ class ProductionRun:
     #: The average throughput of the production run excluding downtimes.
     average_throughput: Optional[float]
 
-    #: The identifier of the production order.
+    #: The identifier of the production order in the external system it was
+    #: synchronized from.
     production_order: str
 
-    #: The identifier of the product that was produced.
+    #: The product that was produced.
     product: Product
 
     #: The begin of the production run.
