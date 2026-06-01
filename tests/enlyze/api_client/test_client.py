@@ -284,7 +284,7 @@ def test_get_paginated_multi_page(
 @respx.mock
 def test_get_paginated_raises_on_invalid_data(api_client):
     class TestModel(PlatformApiModel):
-        my_field: int  # type:ignore
+        my_field: int  # type: ignore
 
     invalid_data = [{"invalid": "data"}]
     paginated_response = _PaginatedResponse(
