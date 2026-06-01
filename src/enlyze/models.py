@@ -332,7 +332,7 @@ class ProductionRuns(list[ProductionRun]):
         path_separator = "."
 
         df = pandas.json_normalize([asdict(run) for run in self], sep=path_separator)
-        df.start = pandas.to_datetime(df.start, utc=True, format="ISO8601")
-        df.end = pandas.to_datetime(df.end, utc=True, format="ISO8601")
+        df["start"] = pandas.to_datetime(df["start"], utc=True, format="ISO8601")
+        df["end"] = pandas.to_datetime(df["end"], utc=True, format="ISO8601")
 
         return dataframe_ensure_schema(df, ProductionRun, path_separator=path_separator)
