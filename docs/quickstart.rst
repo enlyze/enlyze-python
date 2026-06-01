@@ -6,22 +6,26 @@ Make sure you have the ``enlyze`` SDK Python package :doc:`installed </installat
 Authentication
 --------------
 
-In order to interact with the ENLYZE platform you need to acquire an API token. If you
-haven't received one already, please reach out to us at hello@enlyze.com. This token
-will give you access to all the data of your organization, so please keep it safe! In
-case you have lost your token or you think it might have been compromised please reach
-out to us as well.
+In order to interact with the ENLYZE platform you need to acquire an API key. You can
+create and manage API keys yourself directly within the ENLYZE platform. See
+`Creating and Managing API Keys <https://docs.enlyze.com/en/administration/api-keys>`_
+for step-by-step instructions on how to retrieve one.
+
+Every API key grants full read access to all the data of your organization, so please
+keep it safe and treat it like a password! API keys are only displayed once at creation
+time and cannot be recovered. If you have lost your key or think it might have been
+compromised, simply revoke it and create a new one.
 
 Client setup
 ------------
 
 The ``EnlyzeClient`` class is your main entrypoint to interact with the ENLYZE platform.
-It takes care of authentication so you must pass your access token to it.
+It takes care of authentication so you must pass your API key to it.
 
 .. code-block:: pycon
 
     >>> from enlyze import EnlyzeClient
-    >>> enlyze = EnlyzeClient('my_api_token')
+    >>> enlyze = EnlyzeClient('my_api_key')
 
 Exploration
 -----------
