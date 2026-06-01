@@ -50,6 +50,10 @@ nitpick_ignore_regex = [
 ]
 nitpick_ignore = [
     ("py:class", "ComputedFieldInfo"),
+    # Sphinx autodoc fully-qualifies the pandas.DataFrame return annotation to
+    # pandas.core.frame.DataFrame, which pandas does not publish in its
+    # intersphinx inventory (only the public pandas.DataFrame is documented).
+    ("py:class", "pandas.core.frame.DataFrame"),
 ]
 
 autodoc_default_options = {"exclude-members": "__weakref__, __init__, __new__"}
