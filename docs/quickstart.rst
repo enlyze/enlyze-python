@@ -11,7 +11,7 @@ create and manage API keys yourself directly within the ENLYZE platform. See
 `Creating and Managing API Keys <https://docs.enlyze.com/en/administration/api-keys>`_
 for step-by-step instructions on how to retrieve one.
 
-Every API key grants full read access to all the data of your organization, so please
+Every API key grants full access to all the data of your organization, so please
 keep it safe and treat it like a password! API keys are only displayed once at creation
 time and cannot be recovered. If you have lost your key or think it might have been
 compromised, simply revoke it and create a new one.
